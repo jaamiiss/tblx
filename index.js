@@ -13,7 +13,7 @@ app.use(cors());
 
 var admin = require("firebase-admin");
 // Replace the following with your Firebase admin credentials file path
-const serviceAccount = require('./the-blacklist-12fbe-firebase-adminsdk-goj3a-1f44721d17.json');
+const serviceAccount = require('./key/the-blacklist-12fbe-firebase-adminsdk-goj3a-1f44721d17.json');
 
 // Initialize Firebase admin
 admin.initializeApp({
