@@ -4,6 +4,8 @@
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>The Blacklist</title>
+    <meta name="description" content="HTMX, Express, & Firestore"/>            
+    <link rel="icon" href="./favicon.ico" />
     <meta name='viewport' content='width=device-width, initial-scale=1'>
 </head>
 <body>
@@ -22,12 +24,15 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
   <script>
-    // Initialize Firestore
-    const db = firebase.firestore();
     document.addEventListener("DOMContentLoaded", () => {
       // Fetch and display the Firestore data using HTMX
       const dataList = document.getElementById("dataList");
-      dataList.htmxTrigger("list");
+      dataList.htmxTrigger("list", {
+        onSwap: (content, target) => {
+          // Update the content of the "dataList" div
+          target.innerHTML = content;
+        }
+      });
     });
   </script>
 </body>

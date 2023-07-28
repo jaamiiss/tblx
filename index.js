@@ -23,29 +23,53 @@ admin.initializeApp({
 // Get a reference to the Firestore database
 const db = admin.firestore();
 
-app.get('/list', async (req, res) => {
-  try {
-    const snapshot = await db.collection('the-blacklist').get();
-    const data = [];
-    snapshot.forEach(doc => data.push(doc.data()));
-    // res.json(data);
+const cache = {};
 
-    // Convert the data to an HTML list
-    const dataListHTML = data.map(item => `<li>${item.name}</li>`).join('');
+// Caching middleware function
+function cacheMiddleware(req, res, next) {
+    const key = req.originalUrl || req.url;
+    
+    if (cache[key] && !isDataStale(cache[key])) {
+      // If data is present in the cache, send it as the response      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(cache[key].html);
+    } else {
+      // If data is not in the cache, proceed to fetch data from Firestore
+      db.collection('the-blacklist')
+        .get()
+        .then((snapshot) => {
+          const data = [];
+          snapshot.forEach((doc) => data.push(doc.data()));
 
-    // Respond with the HTML list
-    res.send(`<ul>${dataListHTML}</ul>`);
+          // Convert data to HTML list
+          const dataListHTML = data.map((item) => `<li>${item.name}</li>`).join('');
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Something went wrong' });
+          // Store data in the cache with an expiration time of 10 minutes (10 * 60 * 1000 milliseconds)
+          cache[key] = {
+            html: `<ul>${dataListHTML}</ul>`,
+            timestamp: Date.now(),
+          };
+
+          // Respond with the HTML list    
+          res.setHeader('Content-Type', 'text/html');
+          res.send(cache[key].html);
+        })
+        .catch((error) => {
+          console.error(error);
+          res.status(500).json({ error: 'Something went wrong' });
+        });
+    }
   }
-});
 
-// app.get('/', (req, res) => {
-//   // Handle the root route and respond with appropriate content
-//   res.send('Hello, this is the root route!');
-// });
+  function isDataStale(cachedData) {
+    const currentTime = Date.now();
+    const cachedTime = cachedData.timestamp;
+    //const duration = 10 * 60 * 1000; // 10 minutes in milliseconds
+    const duration = 60 * 1000; // 1 minute in milliseconds
+    return currentTime - cachedTime >= duration;
+  }
+
+app.get('/list', cacheMiddleware);
 
 const port = 3000;
 app.listen(port, () => {
