@@ -1,5 +1,12 @@
 const express = require('express');
 const app = express();
+const path = require('path');
+
+app.use(express.static('public'))
+
+app.get('/', (req, res) => {
+    res.sendFile('index.html', {root: path.join(__dirname, 'public')});
+})
 
 const cors = require('cors');
 app.use(cors());
@@ -35,12 +42,15 @@ app.get('/list', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
-  // Handle the root route and respond with appropriate content
-  res.send('Hello, this is the root route!');
-});
+// app.get('/', (req, res) => {
+//   // Handle the root route and respond with appropriate content
+//   res.send('Hello, this is the root route!');
+// });
 
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+
+module.exports = app;
