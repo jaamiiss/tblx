@@ -8,7 +8,8 @@ const path = require('path');
 router.use(express.static('admin'));
 
 router.get('/', (req, res) => {
-  res.sendFile('index.html', { root: 'admin' });
+  //res.sendFile('index.html', { root: 'admin' });
+  res.sendFile('index.html', {root: path.join(__dirname, 'admin')});
 });
 
 router.post('/add-data', (req, res) => {
