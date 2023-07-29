@@ -13,13 +13,14 @@ router.get('/', (req, res) => {
 });
 
 router.post('/add-data', (req, res) => {
-    const { guide, name, status } = req.body;
+    const { guide, name, status, order } = req.body;
 
     db.collection('the-blacklist')
     .add({
       guide: guide,
       name: name,
-      status: status
+      status: status,
+      order: order
     })
     .then((docRef) => {
       console.log('Document written with ID:', docRef.id);
