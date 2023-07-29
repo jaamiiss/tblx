@@ -31,6 +31,7 @@ const db = admin.firestore();
 // New route to fetch data as JSON
 app.get('/list-data', (req, res) => {
   db.collection('the-blacklist')
+    .orderBy('order')
     .get()
     .then((snapshot) => {
       const data = [];
