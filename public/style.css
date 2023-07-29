@@ -1,0 +1,31 @@
+#dataList {
+    width: fit-content;
+    display: block;
+}
+
+.list-item {
+    white-space: nowrap;
+}
+
+.guide {
+    color: red;
+    font-weight: 800;
+    display: inline;
+}
+
+.item-redacted {
+    background-color: black;
+    width: calc(100% - 50px);
+    display: inline-block;
+    margin-left: 5px;
+    min-height: 20px;
+    vertical-align: top;
+}
+
+.dash {
+    padding: 0 5px;
+}
+
+.status {
+    text-transform: uppercase;
+}

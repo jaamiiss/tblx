@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>The Blacklist - List</title>
+  <meta name="description" content="HTMX, Express, & Firestore">            
+  <link rel="icon" href="./favicon.ico">
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h1>The Blacklist</h1>
+  <!-- <div id="dataList" hx-get="/list-data" hx-swap="outerHTML">
+    <ul>
+      <li hx-swap="outerHTML">
+        <span data-hx-get="/list-data" data-hx-swap="outerHTML">{{id}}</span>
+      </li>
+    </ul>
+  </div>
+  <div id="lastUpdated" hx-get="/list-data" data-hx-target="#lastUpdated" data-hx-swap="outerHTML"></div> -->
+  <div id="dataList">
+    <ul>
+      <!-- The Firestore data will be inserted here -->
+    </ul>
+  </div>
+
+
+  <script src="https://unpkg.com/htmx.org/dist/htmx.js"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <script src="index.js"></script>
+</body>
+</html>
