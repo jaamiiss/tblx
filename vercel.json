@@ -11,8 +11,8 @@
           "dest": "index.js"
         },
         {
-          "src": "/admin",
-          "dest": "./admin/admin.js"
+          "src": "/admin/(.*)",
+          "dest": "/admin/admin.js"
         }
     ]
   }
