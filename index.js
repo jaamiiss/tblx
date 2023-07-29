@@ -10,6 +10,10 @@ app.get('/', (req, res) => {
     res.sendFile('index.html', {root: path.join(__dirname, 'public')});
 })
 
+app.get('/admin', (req, res) => {
+    res.sendFile('index.html', {root: path.join(__dirname, 'admin')});
+})
+
 const cors = require('cors');
 app.use(cors());
 
