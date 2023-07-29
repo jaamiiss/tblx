@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const admin = require("firebase-admin");
 const db = admin.firestore();
+const path = require('path');
 
 // Serve static files from the "admin" directory
 router.use(express.static('admin'));
 
 router.get('/', (req, res) => {
-  res.sendFile('list.html', { root: 'admin' });
+  res.sendFile('index.html', { root: 'admin' });
 });
 
 router.post('/add-data', (req, res) => {
