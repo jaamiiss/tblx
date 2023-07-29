@@ -9,12 +9,10 @@
         {
           "src": "/(.*)",
           "dest": "index.js"
-        }
-    ],
-    "routes": [
+        },
         {
           "src": "/admin",
-          "dest": "/admin/admin.js"
+          "dest": "./admin/admin.js"
         }
     ]
   }
