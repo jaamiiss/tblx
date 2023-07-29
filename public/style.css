@@ -1,10 +1,15 @@
 #dataList {
     width: fit-content;
     display: block;
+    column-count: 4;
+    column-gap: 10px; 
 }
 
 .list-item {
     white-space: nowrap;
+    display: block;
+    margin-bottom: 10px; 
+    break-inside: avoid-column;
 }
 
 .guide {
