@@ -96,5 +96,5 @@ function populateGallery(imageCount) {
     tl.to(".items", { scale: 1, opacity: 0.2 }, 0.6);
   }
   
-  var numberOfImages = 19;
+  var numberOfImages = 20;
   populateGallery(numberOfImages);
