@@ -111,7 +111,7 @@ body:not(.home) h1 {
 }
 
 .guide {
-    color: red;
+    color: #FE0000;
     font-weight: 800;
     display: inline;
     width: 40px;
