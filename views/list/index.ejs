@@ -11,14 +11,10 @@
 </head>
 <body>
   <h1>The Blacklist</h1>
-  <div id="dataList" hx-get="/list-data" hx-trigger="load"></div>
+  <div id="dataList" hx-get="/list/list-data" hx-trigger="load"></div>
 
   <script src="https://unpkg.com/htmx.org/dist/htmx.js"></script>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-  <script src="/index.js"></script>
-  </script>
+  <script src="/js/index.js"></script>
 </body>
 </html>
