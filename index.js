@@ -1,62 +1,23 @@
+const dotenv = require('dotenv')
 const express = require('express');
 const app = express();
 const path = require('path');
-const bodyParser = require('body-parser');
+const admin = require('./config/firebase-cfg');
+
+dotenv.config();
 
 app.use(express.static('public'))
-app.use(bodyParser.json());
+app.set('view engine', 'ejs')
+app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
-    res.sendFile('index.html', {root: path.join(__dirname, 'public')});
+  res.sendFile('index.html', {root: path.join(__dirname, 'public')});
 })
 
-const cors = require('cors');
-app.use(cors());
-
-var admin = require("firebase-admin");
-// Replace the following with your Firebase admin credentials file path
-const serviceAccount = require('./key/the-blacklist-12fbe-firebase-adminsdk-goj3a-1f44721d17.json');
-
-// Initialize Firebase admin
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-});
-
-if (!admin.apps.length) {
-    console.log('Firebase Admin SDK initialization failed.');
-} else {
-    console.log('Firebase Admin SDK initialized successfully.');
-}
-  
-const adminRoutes = require('./admin/admin');
-app.use('/admin', adminRoutes);
-
-// Get a reference to the Firestore database
-const db = admin.firestore();
-
-
-// w/o Cache
-// New route to fetch data as JSON
-app.get('/list-data', (req, res) => {
-  db.collection('the-blacklist')
-    .orderBy('order')
-    .get()
-    .then((snapshot) => {
-      const data = [];
-      snapshot.forEach((doc) => data.push(doc.data()));
-
-      res.json(data);
-      console.log(data);
-    })
-    .catch((error) => {
-      console.error(error);
-      res.status(500).json({ error: 'Something went wrong' });
-    });
-});
-
+const listRouter = require('./routes/listRouter')
+app.use("/list", listRouter)
 app.get('/list', (req, res) => {
-    console.log("Accessing /list route"); // Add this line to check if the route is being accessed
-    res.sendFile('list.html', { root: path.join(__dirname, 'public') });
+  res.render('list/index');
 });
 
 const port = 3000;
