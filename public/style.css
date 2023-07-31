@@ -76,7 +76,7 @@ body:not(.home) {
 }
 
 h1 {
-    font-family: 'TBL';
+    font-family: 'TBL', Arial, Helvetica, sans-serif;
     text-transform: uppercase;
 }
 
@@ -110,7 +110,7 @@ body:not(.home) .link:hover {
     display: block;
     margin-bottom: 10px; 
     break-inside: avoid-column;
-    font-family: 'TBL-2';
+    font-family: 'TBL-2', Arial, Helvetica, sans-serif;
     text-transform: uppercase;
     font-size: 14px;
 }
@@ -141,13 +141,13 @@ body:not(.home) .link:hover {
 
 
 @font-face {
-    font-family: TBL-2, Arial, Helvetica, sans-serif;
+    font-family: TBL-2;
     src: url('https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/OCR%20A%20Std%20Regular.ttf');
     font-display: swap;
 }
 
 @font-face {
-    font-family: TBL, Arial, Helvetica, sans-serif;
+    font-family: TBL;
     src: url('https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/Blacklisted.ttf');
     font-display: swap;
 }
