@@ -84,14 +84,19 @@ body:not(.home) h1 {
     letter-spacing: 2px;
 }
 
+body:not(.home) .link, .link:hover {
+    color: #FE0000;
+}
+
 .link {
     color: white;
     text-decoration: none;;
 }
 
-.link:hover {
-    color: #FE0000;
+body:not(.home) .link:hover { 
+    color: #000;
 }
+
 /* List */
 #dataList {
     width: fit-content;
