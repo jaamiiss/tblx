@@ -141,13 +141,15 @@ body:not(.home) .link:hover {
 
 
 @font-face {
-    font-family: TBL-2;
+    font-family: TBL-2, Arial, Helvetica, sans-serif;
     src: url('https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/OCR%20A%20Std%20Regular.ttf');
+    font-display: swap;
 }
 
 @font-face {
-    font-family: TBL;
+    font-family: TBL, Arial, Helvetica, sans-serif;
     src: url('https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/Blacklisted.ttf');
+    font-display: swap;
 }
 
 @media only screen and (max-width: 1024px) {
