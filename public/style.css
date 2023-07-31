@@ -135,10 +135,6 @@ body:not(.home) .link:hover {
     padding: 0 5px;
 }
 
-.status {
-    text-transform: uppercase;
-}
-
 
 @font-face {
     font-family: TBL-2;
