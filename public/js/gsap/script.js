@@ -51,7 +51,7 @@ function populateGallery(imageCount) {
     // Create the img element for browsers that don't support the "picture" element
     var imgElement = document.createElement("img");
     imgElement.setAttribute("src", baseUrl + index + ".jpg");
-    imgElement.setAttribute("alt", "Image " + index);
+    imgElement.setAttribute("alt", "The Blacklist Poster " + index);
 
     // Append the source elements to the picture element
     pictureElement.appendChild(sourceAvifElement);
