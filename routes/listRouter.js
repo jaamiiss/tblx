@@ -14,14 +14,21 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-router.get('/data', (req, res) => {
+router.get('/v1', (req, res) => {
     db.collection(collectionName)
-      .orderBy('order')
+      .where('v1', '>=', 0)
+      .where('v1', '<=', 200)
+      .orderBy('v1')
       .get()
       .then((snapshot) => {
         const data = [];
-        snapshot.forEach((doc) => data.push(doc.data()));
-  
+        snapshot.forEach((doc) => {
+          const docData = doc.data();
+          data.push({
+            id: doc.id,
+            ...docData
+          });
+        });
         res.json(data);
         console.log(data);
       })
