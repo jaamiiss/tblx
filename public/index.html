@@ -14,11 +14,14 @@
 <body class="home">
   <div class="wrapper">
     <div class="items">
-      <div class="default-image">
+      <div class="item" itemscope itemtype="https://schema.org/ImageObject">
         <picture>
           <source type="image/avif" srcset="/assets/images/posters/1.avif">
-          <img src="/assets/images/posters/1.jpg" alt="The Blacklist" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">      
+          <source type="image/jpeg" srcset="/assets/images/posters/1.jpg">
+          <img src="/assets/images/posters/1.jpg" alt="The Blacklist" itemprop="contentUrl">      
         </picture>
+        <meta itemprop="url" content="/assets/images/posters/1.jpg">
+        <meta itemprop="caption" content="The Blacklist Poster 1">
       </div>
     </div>
     <div class="overlay">

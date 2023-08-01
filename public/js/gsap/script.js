@@ -35,6 +35,9 @@ function populateGallery(imageCount) {
     var itemDiv = document.createElement("div");
     itemDiv.className = "item";
 
+    itemDiv.setAttribute("itemscope", "");
+    itemDiv.setAttribute("itemtype", "https://schema.org/ImageObject");
+
     // Create a picture element
     var pictureElement = document.createElement("picture");
 
@@ -54,9 +57,13 @@ function populateGallery(imageCount) {
     imgElement.setAttribute("alt", "The Blacklist Poster " + index);
     
     // Schema
-    imgElement.setAttribute("itemprop", "image");
-    imgElement.setAttribute("itemscope", "");
-    imgElement.setAttribute("itemtype", "https://schema.org/ImageObject");
+    imgElement.setAttribute("itemprop", "contentUrl");
+
+    var metaUrl = document.createElement("meta");
+    var metaCaption = document.createElement("meta");
+
+    metaUrl.setAttribute("content", "/assets/images/posters/1.jpg");
+    metaCaption.setAttribute("content", "The Blacklist Poster " + index)
 
     // Append the source elements to the picture element
     pictureElement.appendChild(sourceAvifElement);
@@ -67,6 +74,10 @@ function populateGallery(imageCount) {
 
     // Append the img element to the item div (for browsers that don't support "picture")
     itemDiv.appendChild(imgElement);
+
+    // Append the meta element to the item div
+    itemDiv.appendChild(metaUrl);
+    itemDiv.appendChild(metaCaption);
 
     // Append the item div to the items container
     itemsContainer.appendChild(itemDiv);
