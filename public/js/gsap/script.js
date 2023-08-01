@@ -52,6 +52,11 @@ function populateGallery(imageCount) {
     var imgElement = document.createElement("img");
     imgElement.setAttribute("src", baseUrl + index + ".jpg");
     imgElement.setAttribute("alt", "The Blacklist Poster " + index);
+    
+    // Schema
+    imgElement.setAttribute("itemprop", "image");
+    imgElement.setAttribute("itemscope", "");
+    imgElement.setAttribute("itemtype", "https://schema.org/ImageObject");
 
     // Append the source elements to the picture element
     pictureElement.appendChild(sourceAvifElement);
