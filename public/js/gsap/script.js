@@ -62,7 +62,7 @@ function populateGallery(imageCount) {
     var metaUrl = document.createElement("meta");
     var metaCaption = document.createElement("meta");
 
-    metaUrl.setAttribute("content", "/assets/images/posters/1.jpg");
+    metaUrl.setAttribute("content", baseUrl + index + ".avif");
     metaCaption.setAttribute("content", "The Blacklist Poster " + index)
 
     // Append the source elements to the picture element
