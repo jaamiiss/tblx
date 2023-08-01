@@ -14,7 +14,7 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-router.get('/list-data', (req, res) => {
+router.get('/data', (req, res) => {
     db.collection(collectionName)
       .orderBy('order')
       .get()
