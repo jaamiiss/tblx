@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const collectionName = process.env.COLLECTION_NAME;
 
-var admin = require("firebase-admin");
+const admin = require("firebase-admin");
 
 if (!admin.apps.length) {
     console.log('Firebase Admin SDK initialization failed.');
