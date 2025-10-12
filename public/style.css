@@ -98,41 +98,90 @@ body:not(.home) .link:hover {
 }
 
 /* List */
+.list-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 #dataList {
-    width: fit-content;
-    display: block;
-    column-count: 4;
-    column-gap: 20px; 
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
 }
 
 .list-item {
-    white-space: nowrap;
-    display: block;
-    margin-bottom: 10px; 
-    break-inside: avoid-column;
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 3px;
     font-family: 'TBL-2', Arial, Helvetica, sans-serif;
     text-transform: uppercase;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    min-height: 32px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-item:hover:not(:has(.item-redacted)) {
+    background-color: rgba(254, 0, 0, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .guide {
     color: #FE0000;
-    font-weight: 800;
-    display: inline;
-    width: 40px;
-    display: inline-block;
+    font-weight: 700;
+    margin-right: 6px;
+    flex-shrink: 0;
+    min-width: 30px;
+    font-size: 12px;
 }
 
 .item-redacted {
     background-color: black;
-    width: calc(100% - 50px);
-    display: inline-block;
-    min-height: 20px;
-    vertical-align: top;
+    flex: 1;
+    min-height: 18px;
+    border-radius: 2px;
 }
 
 .dash {
-    padding: 0 5px;
+    padding: 0 4px;
+    flex-shrink: 0;
+    color: #666;
+    font-weight: 300;
+}
+
+.name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.status {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 @font-face {
@@ -147,14 +196,116 @@ body:not(.home) .link:hover {
     font-display: swap;
 }
 
-@media only screen and (max-width: 1024px) {
+@media only screen and (max-width: 1599px) {
     #dataList {
-        column-count: 2;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
     }
 }
 
-@media only screen and (max-width: 768px) {
+@media only screen and (max-width: 899px) {
     #dataList {
-        column-count: 1;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    
+    .list-item {
+        padding: 5px 6px;
+        font-size: 12px;
+    }
+    
+    .guide {
+        min-width: 28px;
+        font-size: 11px;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .list-container {
+        padding: 0 15px;
+    }
+    
+    #dataList {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    
+    .list-item {
+        padding: 4px 6px;
+        font-size: 11px;
+        min-height: 28px;
+    }
+    
+    .guide {
+        min-width: 25px;
+        font-size: 10px;
+    }
+    
+    .status {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .list-container {
+        padding: 0 10px;
+    }
+    
+    .list-item {
+        padding: 3px 5px;
+        font-size: 10px;
+        min-height: 24px;
+    }
+    
+    .guide {
+        min-width: 22px;
+        font-size: 9px;
+        margin-right: 4px;
+    }
+    
+    .dash {
+        padding: 0 2px;
+    }
+    
+    .status {
+        font-size: 9px;
+        padding: 1px 3px;
+    }
+}
+
+/* Spinner for HTMX loading indicator */
+#spinner {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    color: #FE0000;
+    font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+#spinner.htmx-request {
+    display: block;
+}
+
+#spinner::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #FE0000;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }
