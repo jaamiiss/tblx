@@ -1,22 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Status Names on the List | The Blacklist</title>
-  <meta name="description" content="HTMX, Express, & Firestore">            
-  <link rel="icon" href="/assets/favicon.ico">
-  <link rel="stylesheet" href="/style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-  <h1><a class="link" href="/">The Blacklist</a></h1>
-  <div id="dataList" hx-get="list/version1/:status" hx-swap="outerHTML"></div>
-
-  <script src="https://unpkg.com/htmx.org/dist/htmx.js"></script>
-
-  <script src="/js/index.js"></script>
-
- 
-</body>
-</html>
+<%- include('../layouts/status-layout', {
+  title: 'Status Filter - ' + (status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'),
+  status: status
+}) %>
