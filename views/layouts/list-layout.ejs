@@ -1,16 +1,19 @@
 <%- include('../partials/head', { title: title }) %>
-<body>
+<body<% if (typeof customStyling !== 'undefined' && customStyling) { %> class="<%= customStyling %>"<% } %>>
   <header class="main-header">
     <h1><a class="link" href="/" id="main-title">The Blacklist</a></h1>
     <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
   </header>
   
   <!-- Version Toggle -->
+  <% if (typeof hideToggleButtons === 'undefined' || !hideToggleButtons) { %>
   <div class="version-toggle">
     <a href="/list" class="toggle-btn <%= activeTab === 'v1' ? 'active' : '' %>">V1</a>
     <a href="/list/v2" class="toggle-btn <%= activeTab === 'v2' ? 'active' : '' %>">V2</a>
     <a href="/stats" class="toggle-btn <%= activeTab === 'stats' ? 'active' : '' %>">Stats</a>
+    <a href="/the-blacklist" class="toggle-btn <%= activeTab === 'the-blacklist' ? 'active' : '' %>">Old</a>
   </div>
+  <% } %>
   
   <!-- Toggle Description -->
   <% if (typeof descriptions !== 'undefined' && descriptions[activeTab]) { %>

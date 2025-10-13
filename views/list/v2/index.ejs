@@ -3,7 +3,8 @@
   const descriptions = {
     v1: 'Final List',
     v2: 'Modified List',
-    stats: 'Analytics & Charts'
+    stats: 'Analytics & Charts',
+    'the-blacklist': 'Original Blacklist'
   };
 %>
 <%- include('../../layouts/list-layout', {
@@ -11,4 +12,4 @@
   activeTab: 'v2',
   apiEndpoint: '/list/version2',
   descriptions: descriptions
-}) %>
+}) %> 

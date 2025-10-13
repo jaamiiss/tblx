@@ -1550,3 +1550,56 @@ body:not(.home) .link:hover {
     gap: 10px;
   }
 }
+
+/* The Blacklist Custom Styling */
+body.the-blacklist {
+  padding: 0 !important;
+}
+
+body.the-blacklist .item-status {
+  color: black !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-weight: 500;
+}
+
+/* Override status-specific colors for the-blacklist */
+body.the-blacklist .status.deceased,
+body.the-blacklist .status.active,
+body.the-blacklist .status.incarcerated,
+body.the-blacklist .status.redacted,
+body.the-blacklist .status.unknown,
+body.the-blacklist .status.captured {
+  color: black !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Remove hover effects and borders for the-blacklist */
+body.the-blacklist .list-item:hover,
+body.the-blacklist .legend-item:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+body.the-blacklist .list-item,
+body.the-blacklist .legend-item {
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Ensure redacted items still have black background in the-blacklist */
+body.the-blacklist .item-redacted {
+  background-color: black !important;
+  color: transparent !important;
+}
+
+/* Add padding to list container for the-blacklist */
+body.the-blacklist .list-container {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}

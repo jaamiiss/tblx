@@ -153,13 +153,13 @@ async function getMasterData() {
       .get();
     
     const items = [];
-    snapshot.forEach((doc) => {
-      const docData = doc.data();
+        snapshot.forEach((doc) => {
+          const docData = doc.data();
       items.push({
-        id: doc.id,
-        ...docData
-      });
-    });
+            id: doc.id,
+            ...docData
+          });
+        });
     
     cache.put(MASTER_CACHE_KEY, items, MASTER_CACHE_DURATION);
     console.log(`Master data cached: ${items.length} items`);
@@ -358,10 +358,21 @@ router.get('/version1', async (req, res) => {
 router.get('/version2', async (req, res) => {
   try {
     const data = await getOptimizedData('version2');
-    res.json(data);
+        res.json(data);
     console.log(`Returned ${data.length} items for version2`);
   } catch (error) {
     console.error('Error in version2 route:', error);
+        res.status(500).json({ error: 'Something went wrong' });
+  }
+});
+
+router.get('/the-blacklist', async (req, res) => {
+  try {
+    const data = await getOptimizedData('version1'); // Use same data as V1
+    res.json(data);
+    console.log(`Returned ${data.length} items for the-blacklist`);
+  } catch (error) {
+    console.error('Error in the-blacklist route:', error);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
@@ -445,8 +456,8 @@ router.get('/stats/chart/bar', async (req, res) => {
           '151-200': { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0 }
         };
 
-        snapshot.forEach((doc) => {
-          const docData = doc.data();
+      snapshot.forEach((doc) => {
+        const docData = doc.data();
           const status = (docData.status || 'unknown').toLowerCase();
           const v1 = docData.v1;
           
@@ -472,7 +483,7 @@ router.get('/stats/chart/bar', async (req, res) => {
       }
     });
 
-    res.json(data);
+      res.json(data);
   } catch (error) {
     console.error('Error in bar chart route:', error);
     res.status(500).json({ error: 'Error loading bar chart' });

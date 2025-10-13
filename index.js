@@ -56,6 +56,10 @@ app.get('/list/v2', (req, res) => {
   res.render('list/v2/index');
 });
 
+app.get('/the-blacklist', (req, res) => {
+  res.render('the-blacklist/index');
+});
+
 app.get('/stats', (req, res) => {
   res.render('stats/index');
 });
