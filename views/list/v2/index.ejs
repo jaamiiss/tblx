@@ -1,23 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>V2 Names on the List | The Blacklist</title>
-  <meta name="description" content="HTMX, Express, & Firestore">            
-  <link rel="icon" href="/assets/favicon.ico">
-  <link rel="stylesheet" href="/style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-  <h1><a class="link" href="/">The Blacklist</a></h1>
-  <div class="list-container">
-    <div id="spinner">Loading...</div>
-    <div id="dataList" hx-get="/list/version2" hx-trigger="load" hx-indicator="#spinner"></div>
-  </div>
-
-  <script src="https://unpkg.com/htmx.org/dist/htmx.js"></script>
-
-  <script src="/js/index.js"></script>
-</body>
-</html>
+<%
+  const pageTitle = 'V2 Names on the List';
+  const descriptions = {
+    v1: 'Final List',
+    v2: 'Modified List',
+    stats: 'Analytics & Charts'
+  };
+%>
+<%- include('../../layouts/list-layout', {
+  title: pageTitle,
+  activeTab: 'v2',
+  apiEndpoint: '/list/version2',
+  descriptions: descriptions
+}) %>

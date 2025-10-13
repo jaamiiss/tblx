@@ -1,0 +1,271 @@
+<%- include('../partials/head', { title: title }) %>
+<body>
+  <header class="main-header">
+    <h1><a class="link" href="/" id="main-title">The Blacklist</a></h1>
+    <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
+  </header>
+  
+  <!-- Version Toggle -->
+  <div class="version-toggle">
+    <a href="/list" class="toggle-btn <%= activeTab === 'v1' ? 'active' : '' %>">V1</a>
+    <a href="/list/v2" class="toggle-btn <%= activeTab === 'v2' ? 'active' : '' %>">V2</a>
+    <a href="/stats" class="toggle-btn <%= activeTab === 'stats' ? 'active' : '' %>">Stats</a>
+  </div>
+  
+  <!-- Toggle Description -->
+  <% if (typeof descriptions !== 'undefined' && descriptions[activeTab]) { %>
+    <div class="toggle-description-container">
+      <div class="toggle-description">
+        <strong><%= activeTab.toUpperCase() %>:</strong> <%= descriptions[activeTab] %>
+      </div>
+    </div>
+  <% } %>
+  
+  <!-- Demo Data Button -->
+  <div id="demo-button-container" style="text-align: center; margin: 20px 0; display: none;">
+    <button onclick="loadDummyDataManually()" class="fallback-button">
+      Load Demo Data
+    </button>
+  </div>
+  
+  <div id="spinner">Loading...</div>
+  <div class="list-container">
+    <div id="dataList" hx-get="<%= apiEndpoint %>" hx-trigger="load" hx-indicator="#spinner"></div>
+  </div>
+
+  <script src="/js/index.js"></script>
+  
+  <script>
+    // Update spinner text using StringSchema when available
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.StringSchema) {
+        // Update main title
+        const mainTitle = document.getElementById('main-title');
+        if (mainTitle) {
+          mainTitle.textContent = window.StringSchema.getPageTitle('list');
+        }
+
+        const spinner = document.getElementById('spinner');
+        if (spinner) {
+          spinner.textContent = window.StringSchema.getLoadingMessage('items');
+        }
+        
+        const demoButton = document.querySelector('#demo-button-container button');
+        if (demoButton) {
+          demoButton.textContent = window.StringSchema.getButtonLabel('loadDemo');
+        }
+      }
+      
+      // Hide spinner if content is already loaded
+      setTimeout(() => {
+        const dataList = document.getElementById('dataList');
+        if (dataList && dataList.children.length > 0) {
+          const spinner = document.getElementById('spinner');
+          if (spinner) {
+            spinner.classList.add('content-loaded');
+            console.log('List layout: Hidden spinner - content already loaded');
+          }
+          
+          // Remove loading state class
+          document.body.classList.remove('loading-active');
+        }
+      }, 100);
+    });
+    // List page demo data handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        // Listen for demo mode changes
+        window.addEventListener('demoModeChanged', function(event) {
+          if (event.detail.demoMode && window.demoManager) {
+            loadListDemoData();
+          }
+        });
+
+      // Listen for demo button show event
+      window.addEventListener('showDemoButton', function(event) {
+        if (event.detail.show) {
+          showQuotaExceededMessage();
+        }
+      });
+
+        // Check if demo mode is already enabled and data not already loaded
+        if (window.demoManager && window.demoManager.isDemoMode() && !window.demoManager.hasCurrentPageDemoData()) {
+          loadListDemoData();
+        }
+    });
+
+    function loadListDemoData() {
+      const currentVersion = '<%= activeTab || "v1" %>';
+      const pageId = `list-${currentVersion}`;
+      const endpoint = currentVersion === 'v1' ? '/list/version1' : '/list/version2';
+      
+      if (window.demoManager) {
+        window.demoManager.loadDemoDataForPage(pageId, endpoint, 'dataList', window.renderListData);
+      }
+    }
+
+    // Make render function globally accessible
+    window.renderListData = function(data, containerId) {
+      const renderStartTime = performance.now();
+      
+      // Handle both array and object formats
+      const items = Array.isArray(data) ? data : (data.items || []);
+      console.log(`Render List Data: Starting render for ${containerId} with ${items.length} items`);
+      console.log(`Render List Data: Data format - isArray: ${Array.isArray(data)}, hasItems: ${!!data.items}, itemsLength: ${items.length}`);
+      
+      const container = document.getElementById(containerId);
+      if (!container) {
+        console.log(`Render List Data: Container ${containerId} not found`);
+        return;
+      }
+      
+      if (!items || items.length === 0) {
+        console.log(`Render List Data: No items to render for ${containerId}`);
+        // Show empty state instead of rendering nothing
+        container.innerHTML = window.QuotaMessageHelper.generateNoData();
+        return;
+      }
+      
+      // Validate that items have required properties
+      const validItems = items.filter(item => item && typeof item === 'object' && item.name);
+      if (validItems.length === 0) {
+        console.log(`Render List Data: No valid items found for ${containerId}`);
+        container.innerHTML = window.QuotaMessageHelper.generateInvalidData();
+        return;
+      }
+      
+      console.log(`Render List Data: Rendering ${validItems.length} valid items out of ${items.length} total items`);
+
+      // Use document fragment for better performance
+      const fragment = document.createDocumentFragment();
+      
+      validItems.forEach((item, index) => {
+        // Validate item data before rendering
+        if (!item || typeof item !== 'object') {
+          console.warn(`Render List Data: Invalid item at index ${index}:`, item);
+          return;
+        }
+
+        // Use unified ItemRenderer for consistent rendering with legend wrapper
+        const itemHTML = window.ItemRenderer.renderItem(item, {
+          showV1: true,
+          showV2: false,
+          useV2ForNumber: false,
+          includeLegendWrapper: true
+        });
+        
+        // Create a temporary div to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = itemHTML;
+        fragment.appendChild(tempDiv.firstElementChild);
+      });
+      
+      // Clear container and append fragment
+      container.innerHTML = '';
+      container.appendChild(fragment);
+      
+      // Hide loading spinner immediately
+      const spinner = document.getElementById('spinner');
+      if (spinner) {
+        spinner.style.display = 'none';
+      }
+      
+      // Force immediate visibility
+      container.style.display = 'block';
+      container.style.visibility = 'visible';
+      
+      const renderEndTime = performance.now();
+      console.log(`Render List Data: Completed render for ${containerId} in ${(renderEndTime - renderStartTime).toFixed(2)}ms`);
+      
+      // Verify content is visible
+      setTimeout(() => {
+        const hasContent = container.children.length > 0;
+        const isVisible = container.style.display !== 'none' && container.style.visibility !== 'hidden';
+        console.log(`Render List Data: Content verification - hasContent: ${hasContent}, isVisible: ${isVisible}, children: ${container.children.length}`);
+      }, 100);
+    }
+    
+    // Function to show quota exceeded message
+    function showQuotaExceededMessage() {
+      const dataList = document.getElementById('dataList');
+      const spinner = document.getElementById('spinner');
+      const demoButtonContainer = document.getElementById('demo-button-container');
+      
+      // Hide loading spinner
+      if (spinner) {
+        spinner.style.display = 'none';
+      }
+      
+      // Show demo button
+      if (demoButtonContainer) {
+        demoButtonContainer.style.display = 'block';
+      }
+      
+      if (dataList) {
+        dataList.innerHTML = window.QuotaMessageHelper.generateGeneral();
+      }
+    }
+    
+    // Manual fallback function (called by button click)
+    function loadDummyDataManually() {
+      console.log('Manual demo mode activation');
+      
+      // Show loading state on button
+      const button = document.querySelector('#demo-button-container button');
+      if (button) {
+        window.demoManager.setButtonLoading(button, true);
+      }
+      
+      // Enable demo mode
+      window.demoManager.enableDemoMode();
+      
+      // Hide demo button after a short delay
+      setTimeout(() => {
+        const demoButtonContainer = document.getElementById('demo-button-container');
+        if (demoButtonContainer) {
+          demoButtonContainer.style.display = 'none';
+        }
+      }, 1000);
+    }
+
+    // Listen for successful HTMX requests to detect live data loading
+    document.addEventListener('htmx:afterRequest', function(event) {
+      // Check if this is a successful list data request
+      if (event.detail.successful && (event.detail.pathInfo.requestPath.includes('/list/version1') || event.detail.pathInfo.requestPath.includes('/list/version2'))) {
+        const version = event.detail.pathInfo.requestPath.includes('/version1') ? 'v1' : 'v2';
+        if (window.demoManager) {
+          console.log(`List page: Live data loaded for ${version}`);
+          window.demoManager.onLiveDataLoaded(`list-${version}`, 'dataList');
+        }
+        
+        // Hide spinner after successful request
+        setTimeout(() => {
+          const spinner = document.getElementById('spinner');
+          if (spinner) {
+            spinner.classList.add('content-loaded');
+            console.log('List layout: Hidden spinner after successful HTMX request');
+          }
+          
+          // Remove loading state class
+          document.body.classList.remove('loading-active');
+        }, 50);
+      }
+    });
+
+    // Hide spinner after HTMX content swap
+    document.addEventListener('htmx:afterSwap', function(event) {
+      if (event.detail.target.id === 'dataList') {
+        setTimeout(() => {
+          const spinner = document.getElementById('spinner');
+          if (spinner) {
+            spinner.classList.add('content-loaded');
+            console.log('List layout: Hidden spinner after HTMX swap');
+          }
+          
+          // Remove loading state class
+          document.body.classList.remove('loading-active');
+        }, 50);
+      }
+    });
+  </script>
+</body>
+</html>

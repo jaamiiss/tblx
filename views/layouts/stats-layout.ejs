@@ -1,0 +1,944 @@
+<%- include('../partials/head', { title: title, includeChartJS: true }) %>
+<body>
+  <header class="main-header">
+    <h1><a class="link" href="/" id="main-title">The Blacklist</a></h1>
+    <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
+  </header>
+  
+  <!-- Version Toggle -->
+  <div class="version-toggle">
+    <a href="/list" class="toggle-btn">V1</a>
+    <a href="/list/v2" class="toggle-btn">V2</a>
+    <a href="/stats" class="toggle-btn active">Stats</a>
+  </div>
+  
+  <!-- Toggle Description -->
+  <div class="toggle-description-container">
+    <div class="toggle-description">
+      <strong>Stats:</strong> Data analytics & charts
+    </div>
+  </div>
+  
+         <div class="list-container">
+           <!-- Loading indicator -->
+           <div id="stats-loading-spinner" class="htmx-indicator">
+             Loading statistics...
+           </div>
+           
+           <!-- Demo Data Button -->
+           <div id="demo-button-container" style="text-align: center; margin: 20px 0; display: none;">
+             <button onclick="loadDummyDataManually()" class="fallback-button">
+               Load Demo Data
+             </button>
+           </div>
+           
+           <!-- Stats cards loaded via HTMX -->
+           <div id="statsCards" 
+                hx-get="/list/stats/cards" 
+                hx-trigger="load" 
+                hx-indicator="#stats-loading-spinner">
+           </div>
+           
+           <!-- Charts Section -->
+           <div class="charts-section">
+             <!-- Pie Chart -->
+             <div class="chart-container">
+               <h3 class="chart-title" id="pie-chart-title">Category Distribution</h3>
+             <div class="pie-chart-container" id="pieChartContainer"
+                  hx-get="/list/stats/chart/pie"
+                  hx-trigger="load delay:200ms"
+                  hx-indicator="#pie-loading"
+                  hx-swap="none">
+               <div id="pie-loading" class="chart-loading-indicator">
+                 <div class="chart-spinner"></div>
+                  <div class="chart-loading-text" id="pie-loading-text">Loading Category Distribution...</div>
+               </div>
+               <div id="pie-error" class="chart-error" style="display: none;">
+                 <!-- Chart error message will be inserted by JavaScript -->
+               </div>
+               <div class="pie-chart-wrapper">
+                 <canvas id="pieChart"></canvas>
+               </div>
+             </div>
+               <div class="chart-label">Data based on categories (Male, Female, Company, Group)</div>
+             </div>
+
+             <!-- Bar Chart -->
+             <div class="chart-container">
+               <h3 class="chart-title" id="bar-chart-title">Status by V1 Number Range</h3>
+             <div class="bar-chart-container" id="barChartContainer"
+                  hx-get="/list/stats/chart/bar"
+                  hx-trigger="load delay:500ms"
+                  hx-indicator="#bar-loading"
+                  hx-swap="none">
+               <div id="bar-loading" class="chart-loading-indicator">
+                 <div class="chart-spinner"></div>
+                 <div class="chart-loading-text" id="bar-loading-text">Loading Status by V1 Range...</div>
+               </div>
+               <div id="bar-error" class="chart-error" style="display: none;">
+                 <!-- Chart error message will be inserted by JavaScript -->
+               </div>
+               <canvas id="barChart"></canvas>
+             </div>
+               <div class="chart-label">Grouped by V1 number ranges (0-50, 51-100, 101-150, 151-200)</div>
+             </div>
+
+             <!-- Scatter Plot -->
+             <div class="chart-container">
+               <h3 class="chart-title" id="scatter-chart-title">V1 vs V2 Number Relationship</h3>
+             <div class="scatter-chart-container" id="scatterChartContainer"
+                  hx-get="/list/stats/chart/scatter"
+                  hx-trigger="load delay:800ms"
+                  hx-indicator="#scatter-loading"
+                  hx-swap="none">
+               <div id="scatter-loading" class="chart-loading-indicator">
+                 <div class="chart-spinner"></div>
+                 <div class="chart-loading-text" id="scatter-loading-text">Loading V1 vs V2 Relationship...</div>
+               </div>
+               <div id="scatter-error" class="chart-error" style="display: none;">
+                 <!-- Chart error message will be inserted by JavaScript -->
+               </div>
+               <canvas id="scatterChart"></canvas>
+             </div>
+               <div class="chart-label">Correlation between V1 and V2 numbering systems</div>
+             </div>
+           </div>
+         </div>
+
+
+    <script>
+      // Stats page demo data handlers
+      document.addEventListener('DOMContentLoaded', function() {
+        // Listen for demo mode changes
+        window.addEventListener('demoModeChanged', function(event) {
+          if (event.detail.demoMode && window.demoManager) {
+            loadStatsDemoData();
+          }
+        });
+
+        // Listen for demo button show event
+        window.addEventListener('showDemoButton', function(event) {
+          if (event.detail.show) {
+            showQuotaExceededMessage();
+          }
+        });
+
+        // Check if demo mode is already enabled and data not already loaded
+        if (window.demoManager && window.demoManager.isDemoMode() && !window.demoManager.hasCurrentPageDemoData()) {
+          loadStatsDemoData();
+        }
+
+        // Initialize chart titles and loading text using StringSchema
+        if (window.StringSchema) {
+          // Update main title
+          const mainTitle = document.getElementById('main-title');
+          if (mainTitle) {
+            mainTitle.textContent = window.StringSchema.getPageTitle('stats');
+          }
+
+          // Update chart titles
+          const pieChartTitle = document.getElementById('pie-chart-title');
+          if (pieChartTitle) {
+            pieChartTitle.textContent = window.StringSchema.getChartTitle('categoryDistribution');
+          }
+
+          const barChartTitle = document.getElementById('bar-chart-title');
+          if (barChartTitle) {
+            barChartTitle.textContent = window.StringSchema.getChartTitle('v1RangeChart');
+          }
+
+          const scatterChartTitle = document.getElementById('scatter-chart-title');
+          if (scatterChartTitle) {
+            scatterChartTitle.textContent = window.StringSchema.getChartTitle('v1v2Relationship');
+          }
+
+          // Update loading text
+          const pieLoadingText = document.getElementById('pie-loading-text');
+          if (pieLoadingText) {
+            pieLoadingText.textContent = window.StringSchema.getLoadingMessage('categoryDistribution');
+          }
+
+          const barLoadingText = document.getElementById('bar-loading-text');
+          if (barLoadingText) {
+            barLoadingText.textContent = window.StringSchema.getLoadingMessage('v1RangeChart');
+          }
+
+          const scatterLoadingText = document.getElementById('scatter-loading-text');
+          if (scatterLoadingText) {
+            scatterLoadingText.textContent = window.StringSchema.getLoadingMessage('v1v2Relationship');
+          }
+        }
+      });
+
+      function loadStatsDemoData() {
+        // Load stats cards
+        if (window.demoManager) {
+          window.demoManager.loadDemoDataForPage('stats-cards', '/list/stats', 'statsCards', window.renderStatsCards);
+        }
+        
+        // Charts are now loaded via HTMX, not demo manager
+        // HTMX will handle the chart loading with proper delays
+        console.log('Charts will be loaded via HTMX with staggered delays');
+      }
+
+      // Make render function globally accessible
+      window.renderStatsCards = function(data, containerId) {
+        const renderStartTime = performance.now();
+        console.log(`Render Stats Cards: Starting render for ${containerId} with data:`, data);
+        
+        // Validate data structure
+        if (!data || !data.counts || typeof data.counts !== 'object') {
+          console.error('Render Stats Cards: Invalid data structure:', data);
+          return;
+        }
+        
+        if (!data.percentages || typeof data.percentages !== 'object') {
+          console.error('Render Stats Cards: Missing percentages data:', data);
+          return;
+        }
+        
+        const container = document.getElementById(containerId);
+        if (!container) {
+          console.log(`Render Stats Cards: Container ${containerId} not found`);
+          return;
+        }
+
+        // Use document fragment for better performance
+        const fragment = document.createDocumentFragment();
+        const statsDiv = document.createElement('div');
+        statsDiv.className = 'legend-stats';
+        
+        const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+        
+        statuses.forEach(status => {
+          const cardDiv = document.createElement('div');
+          cardDiv.className = `stat-card ${status}`;
+          cardDiv.onclick = () => window.location.href = `/list/${status}`;
+          cardDiv.innerHTML = `
+            <div class="stat-number">${data.counts[status]}</div>
+            <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+            <div class="stat-percentage">${data.percentages[status]}%</div>
+          `;
+          statsDiv.appendChild(cardDiv);
+        });
+        
+        // Add total card
+        const totalCardDiv = document.createElement('div');
+        totalCardDiv.className = 'stat-card total';
+        totalCardDiv.innerHTML = `
+          <div class="stat-number">${data.counts.total}</div>
+          <div class="stat-label">Total</div>
+          <div class="stat-percentage">100%</div>
+        `;
+        statsDiv.appendChild(totalCardDiv);
+        
+        fragment.appendChild(statsDiv);
+        
+        // Clear container and append fragment
+        container.innerHTML = '';
+        container.appendChild(fragment);
+        
+        // Hide loading spinner immediately
+        const spinner = document.getElementById('stats-loading-spinner');
+        if (spinner) {
+          spinner.classList.remove('show', 'has-quota-message');
+          spinner.style.display = 'none';
+        }
+        
+        // Force immediate visibility
+        container.style.display = 'block';
+        container.style.visibility = 'visible';
+        
+        const renderEndTime = performance.now();
+        console.log(`Render Stats Cards: Completed render for ${containerId} in ${(renderEndTime - renderStartTime).toFixed(2)}ms`);
+        
+        // Verify content is visible
+        setTimeout(() => {
+          const hasContent = container.children.length > 0;
+          const isVisible = container.style.display !== 'none' && container.style.visibility !== 'hidden';
+          console.log(`Render Stats Cards: Content verification - hasContent: ${hasContent}, isVisible: ${isVisible}, children: ${container.children.length}`);
+        }, 100);
+      }
+
+      // Make chart render functions globally accessible
+      window.renderPieChart = function(data, containerId) {
+        console.log(`Render Pie Chart: Starting render for ${containerId} with data:`, data);
+        
+        // Validate data structure
+        if (!data || !data.counts || typeof data.counts !== 'object') {
+          console.error('Render Pie Chart: Invalid data structure:', data);
+          return;
+        }
+        
+        // Hide loading indicator
+        const pieLoading = document.getElementById('pie-loading');
+        if (pieLoading) {
+          pieLoading.style.display = 'none';
+        }
+        
+        // Create pie chart with validated data
+        try {
+          createPieChart(data);
+          console.log('Render Pie Chart: Chart created successfully');
+        } catch (error) {
+          console.error('Error creating pie chart:', error);
+        }
+      }
+
+      window.renderBarChart = function(data, containerId) {
+        console.log(`Render Bar Chart: Starting render for ${containerId} with data:`, data);
+        
+        // Validate data structure
+        if (!data || !data.v1Ranges || typeof data.v1Ranges !== 'object') {
+          console.error('Render Bar Chart: Invalid data structure:', data);
+          return;
+        }
+        
+        // Hide loading indicator
+        const barLoading = document.getElementById('bar-loading');
+        if (barLoading) {
+          barLoading.style.display = 'none';
+        }
+        
+        // Create bar chart with validated data
+        try {
+          createBarChart(data);
+          console.log('Render Bar Chart: Chart created successfully');
+        } catch (error) {
+          console.error('Error creating bar chart:', error);
+        }
+      }
+
+      window.renderScatterChart = function(data, containerId) {
+        console.log(`Render Scatter Chart: Starting render for ${containerId} with data:`, data);
+        console.log(`Render Scatter Chart: Data type: ${typeof data}, isArray: ${Array.isArray(data)}`);
+        console.log(`Render Scatter Chart: Data keys:`, Object.keys(data || {}));
+        console.log(`Render Scatter Chart: Has v1v2Data: ${!!data?.v1v2Data}, Has counts: ${!!data?.counts}, Has percentages: ${!!data?.percentages}`);
+        
+        // Validate data structure
+        if (!data || !data.v1v2Data || !Array.isArray(data.v1v2Data)) {
+          console.error('Render Scatter Chart: Invalid data structure:', data);
+          console.error('Render Scatter Chart: Expected { v1v2Data: [...] } but got:', {
+            hasData: !!data,
+            hasV1V2Data: !!data?.v1v2Data,
+            isV1V2DataArray: Array.isArray(data?.v1v2Data),
+            actualKeys: Object.keys(data || {}),
+            fullData: data
+          });
+          return;
+        }
+        
+        // Hide loading indicator
+        const scatterLoading = document.getElementById('scatter-loading');
+        if (scatterLoading) {
+          scatterLoading.style.display = 'none';
+        }
+        
+        // Create scatter chart with validated data
+        try {
+          createScatterChart(data);
+          console.log('Render Scatter Chart: Chart created successfully');
+        } catch (error) {
+          console.error('Error creating scatter chart:', error);
+        }
+      }
+      
+      // Function to show quota exceeded message
+      function showQuotaExceededMessage() {
+        const loadingSpinner = document.getElementById('stats-loading-spinner');
+        const demoButtonContainer = document.getElementById('demo-button-container');
+        
+        // Show demo button
+        if (demoButtonContainer) {
+          demoButtonContainer.style.display = 'block';
+        }
+        
+        if (loadingSpinner) {
+          loadingSpinner.classList.add('has-quota-message');
+          loadingSpinner.innerHTML = window.QuotaMessageHelper.generateGeneral();
+          loadingSpinner.classList.add('show');
+        }
+      }
+      
+    
+    // HTMX event listeners
+    document.addEventListener('htmx:afterRequest', function(event) {
+      if (event.detail.xhr.status === 200) {
+        // Hide loading spinner when stats cards load
+        if (event.detail.pathInfo.requestPath === '/list/stats/cards') {
+          const spinner = document.getElementById('stats-loading-spinner');
+          if (spinner) {
+            spinner.classList.remove('show', 'has-quota-message');
+          }
+        }
+        
+        // Handle chart data responses
+        if (event.detail.pathInfo.requestPath === '/list/stats/chart/pie') {
+          const pieLoading = document.getElementById('pie-loading');
+          if (pieLoading) {
+            pieLoading.style.display = 'none';
+          }
+          // Parse JSON response and create chart
+          try {
+            const chartData = JSON.parse(event.detail.xhr.responseText);
+            if (window.renderPieChart) {
+              window.renderPieChart(chartData, 'pieChartContainer');
+            }
+          } catch (error) {
+            console.error('Error parsing pie chart data:', error);
+          }
+        }
+        
+        if (event.detail.pathInfo.requestPath === '/list/stats/chart/bar') {
+          const barLoading = document.getElementById('bar-loading');
+          if (barLoading) {
+            barLoading.style.display = 'none';
+          }
+          // Parse JSON response and create chart
+          try {
+            const chartData = JSON.parse(event.detail.xhr.responseText);
+            if (window.renderBarChart) {
+              window.renderBarChart(chartData, 'barChartContainer');
+            }
+          } catch (error) {
+            console.error('Error parsing bar chart data:', error);
+          }
+        }
+        
+        if (event.detail.pathInfo.requestPath === '/list/stats/chart/scatter') {
+          const scatterLoading = document.getElementById('scatter-loading');
+          if (scatterLoading) {
+            scatterLoading.style.display = 'none';
+          }
+          // Parse JSON response and create chart
+          try {
+            const chartData = JSON.parse(event.detail.xhr.responseText);
+            if (window.renderScatterChart) {
+              window.renderScatterChart(chartData, 'scatterChartContainer');
+            }
+          } catch (error) {
+            console.error('Error parsing scatter chart data:', error);
+          }
+        }
+      }
+    });
+
+    document.addEventListener('htmx:responseError', function(event) {
+      console.error('HTMX request failed:', event.detail);
+      
+      // Handle different chart errors
+      if (event.detail.pathInfo.requestPath === '/list/stats/chart/pie') {
+        const pieError = document.getElementById('pie-error');
+        if (pieError) {
+          pieError.innerHTML = window.QuotaMessageHelper.generateChartError('Category Distribution');
+          pieError.style.display = 'flex';
+        }
+      } else if (event.detail.pathInfo.requestPath === '/list/stats/chart/bar') {
+        const barError = document.getElementById('bar-error');
+        if (barError) {
+          barError.innerHTML = window.QuotaMessageHelper.generateChartError('Status by V1 Range');
+          barError.style.display = 'flex';
+        }
+      } else if (event.detail.pathInfo.requestPath === '/list/stats/chart/scatter') {
+        const scatterError = document.getElementById('scatter-error');
+        if (scatterError) {
+          scatterError.innerHTML = window.QuotaMessageHelper.generateChartError('V1 vs V2 Relationship');
+          scatterError.style.display = 'flex';
+        }
+      } else if (event.detail.pathInfo.requestPath === '/list/stats/cards') {
+        const spinner = document.getElementById('stats-loading-spinner');
+        if (spinner) {
+          spinner.classList.remove('show', 'has-quota-message');
+        }
+        // Don't auto-load dummy data, only show button
+      }
+    });
+
+    // Manual fallback function (called by button click)
+    function loadDummyDataManually() {
+      console.log('Manual demo mode activation');
+      
+      // Show loading state on button
+      const button = document.querySelector('#demo-button-container button');
+      if (button) {
+        window.demoManager.setButtonLoading(button, true);
+      }
+      
+      // Enable demo mode
+      window.demoManager.enableDemoMode();
+      
+      // Hide demo button after a short delay
+      setTimeout(() => {
+        const demoButtonContainer = document.getElementById('demo-button-container');
+        if (demoButtonContainer) {
+          demoButtonContainer.style.display = 'none';
+        }
+      }, 1000);
+    }
+    
+    // Fallback function to load dummy data
+    function loadDummyDataFallback() {
+      // Prevent multiple fallback calls
+      if (window.fallbackLoading) {
+        console.log('Fallback already loading, skipping...');
+        return;
+      }
+      
+      window.fallbackLoading = true;
+      console.log('Loading dummy data fallback...');
+      
+      // Load dummy stats cards
+      fetch('/list/stats')
+        .then(response => response.json())
+        .then(data => {
+          // Populate stats cards
+          const statsCards = document.getElementById('statsCards');
+          const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+          
+          let html = '<div class="legend-stats">';
+          statuses.forEach(status => {
+            html += `
+              <div class="stat-card ${status}" onclick="window.location.href='/list/${status}'">
+                <div class="stat-number">${data.counts[status]}</div>
+                <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+                <div class="stat-percentage">${data.percentages[status]}%</div>
+              </div>
+            `;
+          });
+          
+          html += `
+            <div class="stat-card total">
+              <div class="stat-number">${data.counts.total}</div>
+              <div class="stat-label">Total</div>
+              <div class="stat-percentage">100%</div>
+            </div>
+          </div>
+          `;
+          
+          statsCards.innerHTML = html;
+          
+          // Load charts with dummy data
+          setTimeout(() => {
+            try {
+              createPieChart(data);
+              const pieLoading = document.getElementById('pie-loading');
+              if (pieLoading) {
+                pieLoading.style.display = 'none';
+              }
+            } catch (error) {
+              console.error('Error creating pie chart:', error);
+            }
+          }, 200);
+          
+          setTimeout(() => {
+            try {
+              createBarChart(data);
+              const barLoading = document.getElementById('bar-loading');
+              if (barLoading) {
+                barLoading.style.display = 'none';
+              }
+            } catch (error) {
+              console.error('Error creating bar chart:', error);
+            }
+          }, 500);
+          
+          setTimeout(() => {
+            try {
+              createScatterChart(data);
+              const scatterLoading = document.getElementById('scatter-loading');
+              if (scatterLoading) {
+                scatterLoading.style.display = 'none';
+              }
+            } catch (error) {
+              console.error('Error creating scatter chart:', error);
+            }
+          }, 800);
+          
+          console.log('Dummy data fallback loaded successfully');
+          window.fallbackLoading = false;
+        })
+        .catch(error => {
+          console.error('Failed to load dummy data:', error);
+          window.fallbackLoading = false;
+          
+          // Show error message as last resort
+          document.querySelector('.list-container').innerHTML = `
+            <div class="error-container">
+              <div class="error-icon">⚠️</div>
+              <div class="error-title">Connection Error</div>
+              <div class="error-message">Unable to load statistics data. This may be due to network issues or server problems.</div>
+              <button class="retry-button" onclick="location.reload()">Retry</button>
+            </div>
+          `;
+        });
+    }
+
+    // Create pie chart function using Chart.js
+    function createPieChart(data) {
+      console.log('Create Pie Chart: Starting with data:', data);
+      
+      // Check if Chart.js is available
+      if (typeof Chart === 'undefined') {
+        console.error('Create Pie Chart: Chart.js is not loaded');
+        return;
+      }
+      
+      // Destroy existing chart if it exists
+      if (window.pieChartInstance) {
+        console.log('Create Pie Chart: Destroying existing chart instance');
+        window.pieChartInstance.destroy();
+      }
+      
+      const canvas = document.getElementById('pieChart');
+      if (!canvas) {
+        console.error('Create Pie Chart: Canvas element not found');
+        return;
+      }
+      
+      const ctx = canvas.getContext('2d');
+      const categories = ['Male', 'Female', 'Company', 'Group'];
+      const colors = ['#2196F3', '#E91E63', '#9C27B0', '#00BCD4']; // Blue, Pink, Purple, Cyan
+      
+      console.log('Create Pie Chart: Canvas found, preparing category data...');
+      
+      // Prepare data for Chart.js
+      const chartData = [];
+      const chartLabels = [];
+      const chartColors = [];
+      const chartCategories = [];
+      
+      categories.forEach((category, index) => {
+        const count = data.counts[category];
+        console.log(`Create Pie Chart: Processing ${category}: count=${count} (type: ${typeof count})`);
+        if (count > 0) {
+          // Ensure count is a number
+          const numericCount = Number(count);
+          chartData.push(numericCount);
+          chartLabels.push(category);
+          chartColors.push(colors[index]);
+          chartCategories.push(category);
+        }
+      });
+      
+      console.log('Create Pie Chart: Prepared data:', {
+        chartData,
+        chartLabels,
+        chartColors,
+        chartCategories,
+        originalCounts: data.counts,
+        total: chartData.reduce((sum, val) => sum + val, 0)
+      });
+      
+      // Validate data proportions
+      const total = chartData.reduce((sum, val) => sum + val, 0);
+      console.log('Create Pie Chart: Data validation:', {
+        total,
+        expectedTotal: data.counts.total,
+        proportions: chartData.map((val, i) => ({
+          category: chartCategories[i],
+          count: val,
+          percentage: ((val / total) * 100).toFixed(1) + '%'
+        }))
+      });
+      
+      // Create the pie chart
+      console.log('Create Pie Chart: Creating Chart.js instance...');
+      window.pieChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            data: chartData,
+            backgroundColor: chartColors,
+            borderColor: chartColors,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: 0, // Ensure full pie chart
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed;
+                  const category = chartCategories[context.dataIndex];
+                  const percentage = data.percentages[category];
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          },
+          onHover: (event, activeElements) => {
+            // Remove highlight from all stat cards
+            document.querySelectorAll('.stat-card').forEach(card => {
+              card.classList.remove('highlighted');
+            });
+            
+            // Add highlight to corresponding stat card
+            if (activeElements.length > 0) {
+              const category = chartCategories[activeElements[0].index];
+              // Since pie chart shows categories but stat cards show statuses, 
+              // we don't highlight stat cards on pie chart hover
+            }
+          }
+        }
+      });
+      
+      console.log('Create Pie Chart: Chart created successfully!');
+      
+      // Add click event to stat cards to highlight corresponding pie segment
+      document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+          const status = this.classList[1]; // Get the status class (deceased, active, etc.)
+          
+          // Since pie chart now shows categories, we don't highlight pie segments on status card hover
+          // This interaction doesn't make sense anymore as pie chart shows categories, not statuses
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          // Remove highlight from pie chart
+          window.pieChartInstance.setActiveElements([]);
+          window.pieChartInstance.update('none');
+        });
+      });
+    }
+
+    // Create bar chart function
+    function createBarChart(data) {
+      console.log('Create Bar Chart: Starting with data:', data);
+      
+      // Check if Chart.js is available
+      if (typeof Chart === 'undefined') {
+        console.error('Create Bar Chart: Chart.js is not loaded');
+        return;
+      }
+      
+      // Destroy existing chart if it exists
+      if (window.barChartInstance) {
+        console.log('Create Bar Chart: Destroying existing chart instance');
+        window.barChartInstance.destroy();
+      }
+      
+      const canvas = document.getElementById('barChart');
+      if (!canvas) {
+        console.error('Create Bar Chart: Canvas element not found');
+        return;
+      }
+      
+      const ctx = canvas.getContext('2d');
+      const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+      const colors = ['#FE0000', '#4CAF50', '#FF9800', '#9C27B0', '#607D8B', '#FF5722'];
+      const ranges = Object.keys(data.v1Ranges);
+      
+      const datasets = statuses.map((status, index) => ({
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        data: ranges.map(range => data.v1Ranges[range][status]),
+        backgroundColor: colors[index],
+        borderColor: colors[index],
+        borderWidth: 1
+      }));
+
+      window.barChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ranges,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: {
+              stacked: false,
+              title: {
+                display: true,
+                text: 'V1 Number Range'
+              }
+            },
+            y: {
+              stacked: false,
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Number of Items'
+              }
+            }
+          }
+        }
+      });
+      
+      console.log('Create Bar Chart: Chart created successfully!');
+    }
+
+    // Create scatter chart function
+    function createScatterChart(data) {
+      console.log('Create Scatter Chart: Starting with data:', data);
+      
+      // Check if Chart.js is available
+      if (typeof Chart === 'undefined') {
+        console.error('Create Scatter Chart: Chart.js is not loaded');
+        return;
+      }
+      
+      // Destroy existing chart if it exists
+      if (window.scatterChartInstance) {
+        console.log('Create Scatter Chart: Destroying existing chart instance');
+        window.scatterChartInstance.destroy();
+      }
+      
+      let canvas = document.getElementById('scatterChart');
+      if (!canvas) {
+        console.error('Create Scatter Chart: Canvas element not found, retrying in 100ms');
+        console.log('Create Scatter Chart: Available elements:', {
+          scatterChartContainer: !!document.getElementById('scatterChartContainer'),
+          scatterLoading: !!document.getElementById('scatter-loading'),
+          scatterError: !!document.getElementById('scatter-error'),
+          allCanvasElements: document.querySelectorAll('canvas').length,
+          scatterContainerChildren: document.getElementById('scatterChartContainer')?.children.length
+        });
+        
+        // Retry after a short delay
+        setTimeout(() => {
+          canvas = document.getElementById('scatterChart');
+          if (!canvas) {
+            console.error('Create Scatter Chart: Canvas element still not found after retry');
+            console.log('Create Scatter Chart: DOM state after retry:', {
+              scatterChartContainer: !!document.getElementById('scatterChartContainer'),
+              scatterLoading: !!document.getElementById('scatter-loading'),
+              scatterError: !!document.getElementById('scatter-error'),
+              allCanvasElements: document.querySelectorAll('canvas').length,
+              scatterContainerChildren: document.getElementById('scatterChartContainer')?.children.length,
+              scatterContainerHTML: document.getElementById('scatterChartContainer')?.innerHTML
+            });
+            return;
+          }
+          console.log('Create Scatter Chart: Canvas element found on retry');
+          createScatterChartWithCanvas(data, canvas);
+        }, 100);
+        return;
+      }
+      
+      createScatterChartWithCanvas(data, canvas);
+    }
+    
+    function createScatterChartWithCanvas(data, canvas) {
+      
+      const ctx = canvas.getContext('2d');
+      const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+      const colors = ['#FE0000', '#4CAF50', '#FF9800', '#9C27B0', '#607D8B', '#FF5722'];
+      
+      const datasets = statuses.map((status, index) => {
+        const statusData = data.v1v2Data.filter(item => item.status === status);
+        return {
+          label: status.charAt(0).toUpperCase() + status.slice(1),
+          data: statusData.map(item => ({
+            x: item.x,
+            y: item.y
+          })),
+          backgroundColor: colors[index] + '80', // Add transparency
+          borderColor: colors[index],
+          borderWidth: 1,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        };
+      });
+
+      window.scatterChartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: function(context) {
+                  const dataIndex = context[0].dataIndex;
+                  const datasetIndex = context[0].datasetIndex;
+                  const status = statuses[datasetIndex];
+                  const item = data.v1v2Data.find(d => d.status === status && d.x === context[0].parsed.x && d.y === context[0].parsed.y);
+                  return item ? item.name : 'Unknown';
+                },
+                label: function(context) {
+                  return `V1: ${context.parsed.x}, V2: ${context.parsed.y}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'V1 Number'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'V2 Number'
+              }
+            }
+          }
+        }
+      });
+      
+      console.log('Create Scatter Chart: Chart created successfully!');
+    }
+
+    // Update spinner text using StringSchema when available
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.StringSchema) {
+        const spinner = document.getElementById('stats-loading-spinner');
+        if (spinner) {
+          spinner.textContent = window.StringSchema.getLoadingMessage('statistics');
+        }
+        
+        const demoButton = document.querySelector('#demo-button-container button');
+        if (demoButton) {
+          demoButton.textContent = window.StringSchema.getButtonLabel('loadDemo');
+        }
+      }
+    });
+
+    // Listen for successful HTMX requests to detect live data loading
+    document.addEventListener('htmx:afterRequest', function(event) {
+      // Check if this is a successful stats data request
+      if (event.detail.successful && event.detail.pathInfo.requestPath.includes('/list/stats')) {
+        if (window.demoManager) {
+          console.log('Stats page: Live data loaded');
+          window.demoManager.onLiveDataLoaded('stats', 'statsCards');
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
