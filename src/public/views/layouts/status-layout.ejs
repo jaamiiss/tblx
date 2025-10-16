@@ -1,0 +1,232 @@
+<%- include('../partials/head', { title: title }) %>
+<body>
+  <header class="main-header">
+    <h1><a class="link" href="/" id="main-title">The Blacklist</a></h1>
+    <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
+  </header>
+  
+  <!-- Reusable List Components -->
+  <%- include('../partials/list-components', {
+    status: status,
+    hideToggleButtons: false,
+    activeTab: 'status'
+  }) %>
+  
+  <div class="list-container">
+    <div class="status-header">
+      <div class="status-title"><%= (status || 'unknown').charAt(0).toUpperCase() + (status || 'unknown').slice(1) %> Status</div>
+      <div class="status-subtitle">Filtered list of individuals with <%= status || 'unknown' %> status</div>
+    </div>
+    
+    <div class="legend-tabs">
+      <a href="/list/deceased" class="legend-tab <%= status === 'deceased' ? 'active' : '' %>" hx-boost="true">Deceased</a>
+      <a href="/list/active" class="legend-tab <%= status === 'active' ? 'active' : '' %>" hx-boost="true">Active</a>
+      <a href="/list/incarcerated" class="legend-tab <%= status === 'incarcerated' ? 'active' : '' %>" hx-boost="true">Incarcerated</a>
+      <a href="/list/redacted" class="legend-tab <%= status === 'redacted' ? 'active' : '' %>" hx-boost="true">Redacted</a>
+      <a href="/list/unknown" class="legend-tab <%= status === 'unknown' ? 'active' : '' %>" hx-boost="true">Unknown</a>
+      <a href="/list/captured" class="legend-tab <%= status === 'captured' ? 'active' : '' %>" hx-boost="true">Captured</a>
+    </div>
+    
+    <div class="legend-section active" id="statusSection">
+      <div class="legend-items" id="statusItems" 
+           hx-get="/status/<%= status || 'unknown' %>" 
+           hx-trigger="load" 
+           hx-indicator="#loading-spinner">
+        <div id="loading-spinner" class="htmx-indicator">Loading items...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Status page demo data handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        // Listen for demo mode changes
+        window.addEventListener('demoModeChanged', function(event) {
+          if (event.detail.demoMode && window.demoManager) {
+            loadStatusDemoData();
+          }
+        });
+
+      // Listen for demo button show event
+      window.addEventListener('showDemoButton', function(event) {
+        if (event.detail.show) {
+          showQuotaExceededMessage();
+        }
+      });
+
+        // Check if demo mode is already enabled and data not already loaded
+        if (window.demoManager && window.demoManager.isDemoMode() && !window.demoManager.hasCurrentPageDemoData()) {
+          loadStatusDemoData();
+        }
+    });
+
+    function loadStatusDemoData() {
+      const currentStatus = '<%= status || "unknown" %>';
+      const pageId = `status-${currentStatus}`;
+      const endpoint = `/status/${currentStatus}`;
+      
+      if (window.demoManager) {
+        window.demoManager.loadDemoDataForPage(pageId, endpoint, 'statusItems', window.renderStatusData);
+      }
+    }
+
+    // Make render function globally accessible
+    window.renderStatusData = function(data, containerId) {
+      const renderStartTime = performance.now();
+      
+      // Handle both array and object formats
+      const items = Array.isArray(data) ? data : (data.items || []);
+      console.log(`Render Status Data: Starting render for ${containerId} with ${items.length} items`);
+      console.log(`Render Status Data: Data format - isArray: ${Array.isArray(data)}, hasItems: ${!!data.items}, itemsLength: ${items.length}`);
+      
+      const container = document.getElementById(containerId);
+      if (!container) {
+        console.log(`Render Status Data: Container ${containerId} not found`);
+        return;
+      }
+      
+      if (!items || items.length === 0) {
+        console.log(`Render Status Data: No items to render for ${containerId}`);
+        // Show empty state instead of rendering nothing
+        container.innerHTML = window.QuotaMessageHelper.generateNoData();
+        return;
+      }
+      
+      // Validate that items have required properties
+      const validItems = items.filter(item => item && typeof item === 'object' && item.name);
+      if (validItems.length === 0) {
+        console.log(`Render Status Data: No valid items found for ${containerId}`);
+        container.innerHTML = window.QuotaMessageHelper.generateInvalidData();
+        return;
+      }
+      
+      console.log(`Render Status Data: Rendering ${validItems.length} valid items out of ${items.length} total items`);
+
+      // Use document fragment for better performance
+      const fragment = document.createDocumentFragment();
+      
+      validItems.forEach((item, index) => {
+        // Validate item data before rendering
+        if (!item || typeof item !== 'object') {
+          console.warn(`Render Status Data: Invalid item at index ${index}:`, item);
+          return;
+        }
+        
+        // Generate HTML to match live data structure
+        const status = item.status || 'unknown';
+        const name = item.name || 'Unknown';
+        const v1 = item.v1 || 0;
+        
+        const statusClass = status === 'redacted' ? 'legend-item redacted' : `legend-item ${status}`;
+        
+        let itemHTML;
+        if (status === 'redacted') {
+          itemHTML = `<div class="${statusClass}"><span class="guide">#${v1}.</span><span class="item-redacted"></span></div>`;
+        } else {
+          itemHTML = `<div class="${statusClass}"><span class="guide">#${v1}.</span><div class="item-content"><div class="item-name">${name}</div></div></div>`;
+        }
+        
+        // Create a temporary div to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = itemHTML;
+        fragment.appendChild(tempDiv.firstElementChild);
+      });
+      
+      // Clear container and append fragment
+      container.innerHTML = '';
+      container.appendChild(fragment);
+      
+      // Hide loading spinner immediately
+      const loadingSpinner = document.getElementById('loading-spinner');
+      if (loadingSpinner) {
+        loadingSpinner.style.display = 'none';
+      }
+      
+      // Force immediate visibility
+      container.style.display = 'block';
+      container.style.visibility = 'visible';
+      
+      const renderEndTime = performance.now();
+      console.log(`Render Status Data: Completed render for ${containerId} in ${(renderEndTime - renderStartTime).toFixed(2)}ms`);
+      
+      // Verify content is visible
+      setTimeout(() => {
+        const hasContent = container.children.length > 0;
+        const isVisible = container.style.display !== 'none' && container.style.visibility !== 'hidden';
+        console.log(`Render Status Data: Content verification - hasContent: ${hasContent}, isVisible: ${isVisible}, children: ${container.children.length}`);
+      }, 100);
+    }
+    
+    // Function to show quota exceeded message
+    function showQuotaExceededMessage() {
+      const statusItems = document.getElementById('statusItems');
+      const loadingSpinner = document.getElementById('loading-spinner');
+      const demoButtonContainer = document.getElementById('demo-button-container');
+      
+      // Hide loading spinner
+      if (loadingSpinner) {
+        loadingSpinner.style.display = 'none';
+      }
+      
+      // Show demo button
+      if (demoButtonContainer) {
+        demoButtonContainer.style.display = 'block';
+      }
+      
+      if (statusItems) {
+        statusItems.innerHTML = window.QuotaMessageHelper.generateGeneral();
+      }
+    }
+    
+    // Manual fallback function (called by button click)
+    function loadDummyDataManually() {
+      console.log('Manual demo mode activation');
+      
+      // Show loading state on button
+      const button = document.querySelector('#demo-button-container button');
+      if (button) {
+        window.demoManager.setButtonLoading(button, true);
+      }
+      
+      // Enable demo mode
+      window.demoManager.enableDemoMode();
+      
+      // Hide demo button after a short delay
+      setTimeout(() => {
+        const demoButtonContainer = document.getElementById('demo-button-container');
+        if (demoButtonContainer) {
+          demoButtonContainer.style.display = 'none';
+        }
+      }, 1000);
+    }
+
+    // Update spinner text using StringSchema when available
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.StringSchema) {
+        // Update main title
+        const mainTitle = document.getElementById('main-title');
+        if (mainTitle) {
+          mainTitle.textContent = window.StringSchema.getPageTitle('status');
+        }
+
+        const spinner = document.getElementById('loading-spinner');
+        if (spinner) {
+          spinner.textContent = window.StringSchema.getLoadingMessage('items');
+        }
+      }
+    });
+
+    // Listen for successful HTMX requests to detect live data loading
+    document.addEventListener('htmx:afterRequest', function(event) {
+      // Check if this is a successful status data request
+      if (event.detail.successful && event.detail.pathInfo.requestPath.includes('/status/')) {
+        const status = event.detail.pathInfo.requestPath.split('/status/')[1];
+        if (status && window.demoManager) {
+          console.log(`Status page: Live data loaded for ${status}`);
+          window.demoManager.onLiveDataLoaded(`status-${status}`, 'statusItems');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

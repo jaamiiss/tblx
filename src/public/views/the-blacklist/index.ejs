@@ -1,0 +1,17 @@
+<%
+  const pageTitle = 'The Blacklist';
+  const descriptions = {
+    v1: 'Final List',
+    v2: 'Modified List',
+    stats: 'Analytics & Charts',
+    'the-blacklist': 'Original Blacklist'
+  };
+%>
+<%- include('../layouts/list-layout', {
+  title: pageTitle,
+  activeTab: 'the-blacklist',
+  apiEndpoint: '/version1',
+  descriptions: descriptions,
+  hideToggleButtons: true,
+  customStyling: 'the-blacklist'
+}) %>

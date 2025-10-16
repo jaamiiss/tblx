@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>The Blacklist</title>
+  <meta name="description" content="HTMX, Express, & Firestore">            
+  <link rel="icon" href="/assets/favicon.ico">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Global Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.js" integrity="sha384-yWakaGAFicqusuwOYEmoRjLNOC+6OFsdmwC2lbGQaRELtuVEqNzt11c2J711DeCZ" crossorigin="anonymous"></script>
+  <script src="/assets/js/string-schema.js"></script>
+  <script src="/assets/js/demo-manager.js"></script>
+  <script src="/assets/js/quota-message-helper.js"></script>
+  <script src="/assets/js/item-renderer.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-16esztaSRplJROstbIIdwX3N97V1+pZvV33ABoG1H2OyTttBxEGkTsoIVsiP1iaTtM8b3+hu2kB6pQ4Clr5yug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" integrity="sha512-Ic9xkERjyZ1xgJ5svx3y0u3xrvfT/uPkV99LBwe68xjy/mGtO+4eURHZBW2xW4SZbFrF1Tf090XqB+EVgXnVjw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6WCN3QXN8W"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6WCN3QXN8W');
+  </script>  
+</head>
+<body class="home">
+  <div class="wrapper">
+    <div class="items">
+      <div class="item" itemscope itemtype="https://schema.org/ImageObject">
+        <picture>
+          <source type="image/avif" srcset="/assets/images/posters/1.avif">
+          <source type="image/jpeg" srcset="/assets/images/posters/1.jpg">
+          <img src="/assets/images/posters/1.jpg" alt="The Blacklist" itemprop="contentUrl">      
+        </picture>
+        <meta itemprop="url" content="/assets/images/posters/1.jpg">
+        <meta itemprop="caption" content="The Blacklist Poster 1">
+      </div>
+    </div>
+    <div class="overlay">
+      <h1 class="title" data-text="The Blacklist"><a class="link" href="/list">The Blacklist</a></h1>
+    </div>
+  </div>
+  <script src="/assets/js/gsap/script.js"></script>
+</body>
+</html>

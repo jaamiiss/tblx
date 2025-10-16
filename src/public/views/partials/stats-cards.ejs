@@ -1,0 +1,31 @@
+<% if (typeof stats !== 'undefined' && stats) { %>
+  <div class="stats-cards-container">
+    <div class="status-cards-grid">
+      <% 
+        const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+        statuses.forEach(status => {
+      %>
+        <div class="stat-card <%= status %>" onclick="window.location.href='/list/<%= status %>'">
+          <div class="stat-number"><%= stats.counts[status] || 0 %></div>
+          <div class="stat-label"><%= status.charAt(0).toUpperCase() + status.slice(1) %></div>
+          <div class="stat-percentage"><%= stats.percentages[status] || '0.0' %>%</div>
+        </div>
+      <% }); %>
+    </div>
+    
+    <!-- Total card separated and centered -->
+    <div class="total-card-container">
+      <div class="stat-card total">
+        <div class="stat-number"><%= stats.counts.total || 0 %></div>
+        <div class="stat-label">Total</div>
+        <div class="stat-percentage">100%</div>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <div class="stats-loading">
+    <p>Loading statistics...</p>
+  </div>
+<% } %>
+
+

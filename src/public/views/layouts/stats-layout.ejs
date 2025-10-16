@@ -1,0 +1,210 @@
+<%- include('../partials/head', { title: title, includeChartJS: true }) %>
+<body>
+  <header class="main-header">
+    <h1><a class="link" href="/" id="main-title">The Blacklist</a></h1>
+    <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
+  </header>
+  
+  <!-- Version Toggle -->
+  <div class="version-toggle">
+    <a href="/list" class="toggle-btn">V1</a>
+    <a href="/list/v2" class="toggle-btn">V2</a>
+    <a href="/stats" class="toggle-btn active">Stats</a>
+    <a href="/the-blacklist" class="toggle-btn">Old</a>
+  </div>
+  
+  <!-- Toggle Description -->
+  <div class="toggle-description-container">
+    <div class="toggle-description">
+      <strong>Stats:</strong> Data analytics & charts
+    </div>
+  </div>
+
+  <main class="main-content">
+    <div class="container">
+      <!-- Stats Cards with HTMX -->
+      <div id="statsCards" 
+           class="stats-cards"
+           hx-get="/stats/cards" 
+           hx-trigger="load, every 30s"
+           hx-indicator="#stats-loading-spinner"
+           hx-target="this"
+           hx-swap="innerHTML">
+        <!-- Initial server-side rendered content -->
+        <%- include('../partials/stats-cards', { stats: stats }) %>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-section">
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+          <!-- Category Distribution Chart -->
+          <div class="chart-container">
+            <h3>Category Distribution</h3>
+            <div class="chart-wrapper">
+              <div id="pieChartContainer" class="chart-canvas-container">
+                <canvas id="pieChart"></canvas>
+              </div>
+              <div id="pieChartLegend" class="chart-legend"></div>
+            </div>
+          </div>
+
+          <!-- Status Distribution Chart -->
+          <div class="chart-container">
+            <h3>Status Distribution</h3>
+            <div class="chart-wrapper">
+              <div id="barChartContainer" class="chart-canvas-container">
+                <canvas id="barChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- V1 vs V2 Scatter Chart -->
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>V1 vs V2 Analysis</h3>
+            </div>
+            <div class="chart-filters">
+              <select id="dataFilter" class="filter-select">
+                <option value="both">Both</option>
+                <option value="v1">V1</option>
+                <option value="v2">V2</option>
+              </select>
+              <select id="statusFilter" class="filter-select">
+                <option value="all">All</option>
+                <option value="deceased">Deceased</option>
+                <option value="active">Active</option>
+                <option value="incarcerated">Incarcerated</option>
+                <option value="redacted">Redacted</option>
+                <option value="unknown">Unknown</option>
+                <option value="captured">Captured</option>
+              </select>
+            </div>
+            <div class="chart-wrapper">
+              <div id="scatterChartContainer" class="chart-canvas-container">
+                <canvas id="scatterChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quota Exceeded Message -->
+      <div id="quota-exceeded-message" class="quota-exceeded-message" style="display: none;">
+        <div class="quota-message-content">
+          <h3>Database Quota Exceeded</h3>
+          <p>We've reached our database read limit. Please try again later or contact support.</p>
+          <div id="demo-button-container">
+            <button onclick="loadDemoData()" class="demo-button">Load Demo Data</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Spinner for Stats Cards -->
+      <div id="stats-loading-spinner" class="htmx-indicator stats-loading-spinner">
+        <div class="loading-content">
+          <div class="spinner"></div>
+          <span>Updating statistics...</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Shared Chart Utilities -->
+  <script src="/shared/assets/js/chart-utils.js"></script>
+  
+  <!-- Stats Page Charts -->
+  <script src="/assets/js/stats-page-charts.js"></script>
+
+  <script>
+    // Update spinner text using StringSchema when available
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.StringSchema) {
+        const spinner = document.getElementById('stats-loading-spinner');
+        if (spinner) {
+          spinner.textContent = window.StringSchema.getLoadingMessage('statistics');
+        }
+        
+        const demoButton = document.querySelector('#demo-button-container button');
+        if (demoButton) {
+          demoButton.textContent = window.StringSchema.getButtonLabel('loadDemo');
+        }
+      }
+    });
+
+    // HTMX Event Handlers for Stats Cards
+    document.addEventListener('htmx:beforeRequest', function(event) {
+      // Show loading state for stats cards
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.log('Stats cards: Starting update...');
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.add('htmx-loading');
+        }
+      }
+    });
+
+    document.addEventListener('htmx:afterRequest', function(event) {
+      // Handle successful stats cards update
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.remove('htmx-loading');
+          
+          if (event.detail.successful) {
+            console.log('Stats cards: Update successful');
+            // Add success animation
+            statsCards.classList.add('htmx-success');
+            setTimeout(() => {
+              statsCards.classList.remove('htmx-success');
+            }, 2000);
+            
+            // Notify demo manager
+            if (window.demoManager) {
+              window.demoManager.onLiveDataLoaded('stats-cards', 'statsCards');
+            }
+          } else {
+            console.log('Stats cards: Update failed');
+            statsCards.classList.add('htmx-error');
+          }
+        }
+      }
+    });
+
+    document.addEventListener('htmx:responseError', function(event) {
+      // Handle HTMX response errors
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.error('Stats cards: HTMX response error:', event.detail);
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.remove('htmx-loading');
+          statsCards.classList.add('htmx-error');
+        }
+      }
+    });
+
+    document.addEventListener('htmx:sendError', function(event) {
+      // Handle HTMX send errors (network issues)
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.error('Stats cards: HTMX send error:', event.detail);
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.remove('htmx-loading');
+          statsCards.classList.add('htmx-error');
+        }
+      }
+    });
+
+    // Initialize demo manager
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof initDemoManager === 'function') {
+        initDemoManager();
+      }
+    });
+  </script>
+</body>
+</html>
