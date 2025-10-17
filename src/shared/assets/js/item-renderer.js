@@ -15,7 +15,11 @@ class ItemRenderer {
       showV1 = true,
       showV2 = false,
       useV2ForNumber = false,
-      includeLegendWrapper = false
+      includeLegendWrapper = false,
+      showAppearance = false,
+      showBio = false,
+      showImage = false,
+      showLink = false
     } = options;
 
     // Safely extract values with fallbacks
@@ -23,6 +27,12 @@ class ItemRenderer {
     const status = item.status || 'unknown';
     const v1 = item.v1 !== undefined ? item.v1 : 0;
     const v2 = item.v2 !== undefined ? item.v2 : 0;
+    
+    // Extract new fields
+    const image = item.image || '';
+    const link = item.link || '';
+    const bio = item.bio || '';
+    const appearance = item.appearance || [];
 
     // Determine item number based on options
     const itemNumber = useV2ForNumber ? v2 : v1;
@@ -33,7 +43,22 @@ class ItemRenderer {
     // Generate guide HTML
     const guideHTML = this.generateGuideHTML(itemNumber, showV1, showV2, v1, v2);
 
-    const itemContent = `<div class="list-item">${guideHTML} ${statusHTML}</div>`;
+    // Generate additional info HTML if requested
+    let additionalHTML = '';
+    if (showAppearance && appearance.length > 0) {
+      additionalHTML += this.generateAppearanceHTML(appearance);
+    }
+    if (showBio && bio) {
+      additionalHTML += this.generateBioHTML(bio);
+    }
+    if (showImage && image) {
+      additionalHTML += this.generateImageHTML(image);
+    }
+    if (showLink && link) {
+      additionalHTML += this.generateLinkHTML(link);
+    }
+
+    const itemContent = `<div class="list-item">${guideHTML} ${statusHTML}${additionalHTML}</div>`;
 
     // Wrap in legend-item if requested (for consistent styling)
     if (includeLegendWrapper) {
@@ -122,6 +147,55 @@ class ItemRenderer {
     }).join('');
 
     return columnHTML;
+  }
+
+  /**
+   * Generate appearance HTML
+   * @param {Array} appearance - Array of appearance objects
+   * @returns {string} HTML string for appearance
+   */
+  static generateAppearanceHTML(appearance) {
+    if (!appearance || appearance.length === 0) return '';
+    
+    const appearanceText = appearance
+      .map(app => `S${app.season}E${app.episode}`)
+      .join(', ');
+    
+    return `<div class="item-appearance">Appearances: ${appearanceText}</div>`;
+  }
+
+  /**
+   * Generate bio HTML
+   * @param {string} bio - Bio text
+   * @returns {string} HTML string for bio
+   */
+  static generateBioHTML(bio) {
+    if (!bio) return '';
+    
+    const truncatedBio = bio.length > 100 ? bio.substring(0, 100) + '...' : bio;
+    return `<div class="item-bio" title="${bio}">${truncatedBio}</div>`;
+  }
+
+  /**
+   * Generate image HTML
+   * @param {string} imageUrl - Image URL
+   * @returns {string} HTML string for image
+   */
+  static generateImageHTML(imageUrl) {
+    if (!imageUrl) return '';
+    
+    return `<div class="item-image"><img src="${imageUrl}" alt="Character image" style="width: 20px; height: 20px; border-radius: 3px;"></div>`;
+  }
+
+  /**
+   * Generate link HTML
+   * @param {string} linkUrl - Link URL
+   * @returns {string} HTML string for link
+   */
+  static generateLinkHTML(linkUrl) {
+    if (!linkUrl) return '';
+    
+    return `<div class="item-link"><a href="${linkUrl}" target="_blank" rel="noopener noreferrer">🔗</a></div>`;
   }
 
   /**

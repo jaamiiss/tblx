@@ -1,8 +1,42 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Create logger for index.js
+    const indexLogger = window.logManager ? window.logManager.createModuleLogger('Index') : {
+      error: console.error,
+      warn: console.warn,
+      info: console.log,
+      debug: console.log,
+      verbose: console.log
+    };
+    
+    // Suppress HTMX error events for aborted requests (expected when requests are blocked)
+    htmx.on('htmx:sendAbort', (event) => {
+        // Don't log aborted requests as they're expected when requests are blocked
+        indexLogger.debug('Request aborted (expected when requests are blocked)');
+    });
+    
+    // Suppress HTMX error events for network issues
+    htmx.on('htmx:responseError', (event) => {
+        // Only log if it's not a network error (status 0)
+        if (event.detail.xhr.status !== 0) {
+            indexLogger.error('Response error:', event.detail.xhr.status, event.detail.xhr.statusText);
+        } else {
+            indexLogger.debug('Network error (expected when requests are blocked)');
+        }
+    });
+    
     htmx.on('htmx:afterRequest', (event) => {
         if (event.detail.elt.id === 'dataList') {
             const dataList = document.getElementById('dataList');
             try {
+                // Check if response is valid and not empty
+                if (!event.detail.xhr.response || event.detail.xhr.response.trim() === '') {
+                    // Only log if it's not a network error (which is expected when requests are blocked)
+                    if (event.detail.xhr.status !== 0) {
+                        indexLogger.warn('Empty response received, skipping JSON parsing');
+                    }
+                    return;
+                }
+                
                 const data = JSON.parse(event.detail.xhr.response);
                 
                 // Check if we're on the v2 page
@@ -77,7 +111,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 dataList.innerHTML = columnHTML;
             } catch (error) {
-                console.error("Error parsing JSON response:", error);
+                indexLogger.error("Error parsing JSON response:", error);
+                indexLogger.debug("Response content:", event.detail.xhr.response);
+                indexLogger.debug("Response status:", event.detail.xhr.status);
+                
+                // Show error message to user
+                if (dataList) {
+                    dataList.innerHTML = '<div class="error-message">Failed to load data. Please try again.</div>';
+                }
             }
         }
     });

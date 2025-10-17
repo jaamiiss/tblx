@@ -26,6 +26,13 @@ app.use('/admin/assets', express.static(path.join(__dirname, 'src/admin/assets')
 app.use('/shared/assets', express.static(path.join(__dirname, 'src/shared/assets')));
 app.use('/assets', express.static(path.join(__dirname, 'src/public/assets')));
 
+// Serve optimized build files with cache headers
+app.use('/assets/build', express.static(path.join(__dirname, 'src/public/assets/build'), {
+  maxAge: '1y', // Cache for 1 year
+  etag: true,
+  lastModified: true
+}));
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -60,3 +67,7 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+
+
+

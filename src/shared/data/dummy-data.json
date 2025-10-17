@@ -5,24 +5,79 @@
       "name": "John Smith",
       "v1": 1,
       "v2": 101,
+      "version": {
+        "v1": 1,
+        "v2": 101
+      },
       "status": "deceased",
-      "category": "Male"
+      "category": "Male",
+      "image": "https://static.wikia.nocookie.net/blacklist/images/3/36/Red_FBI.png",
+      "link": "https://the-blacklist.fandom.com/wiki/Raymond_Reddington",
+      "bio": "He is a criminal mastermind, making it to #4 and later to #1 on the FBI's Ten Most Wanted Fugitives, who suddenly turns himself in after 20+ years of evading the FBI.",
+      "appearance": [
+        {
+          "season": 1,
+          "episode": 1
+        },
+        {
+          "season": 2,
+          "episode": 5
+        }
+      ]
     },
     {
       "id": "dummy_002",
       "name": "Sarah Johnson",
       "v1": 2,
       "v2": 102,
+      "version": {
+        "v1": 2,
+        "v2": 102
+      },
       "status": "active",
-      "category": "Female"
+      "category": "Female",
+      "image": "https://static.wikia.nocookie.net/blacklist/images/3/36/Red_FBI.png",
+      "link": "https://the-blacklist.fandom.com/wiki/Raymond_Reddington",
+      "bio": "She is a criminal mastermind, making it to #4 and later to #1 on the FBI's Ten Most Wanted Fugitives, who suddenly turns herself in after 20+ years of evading the FBI.",
+      "appearance": [
+        {
+          "season": 3,
+          "episode": 12
+        },
+        {
+          "season": 4,
+          "episode": 8
+        },
+        {
+          "season": 5,
+          "episode": 15
+        }
+      ]
     },
     {
       "id": "dummy_003",
       "name": "TechCorp Inc.",
       "v1": 3,
       "v2": 103,
+      "version": {
+        "v1": 3,
+        "v2": 103
+      },
       "status": "incarcerated",
-      "category": "Company"
+      "category": "Company",
+      "image": "https://static.wikia.nocookie.net/blacklist/images/3/36/Red_FBI.png",
+      "link": "https://the-blacklist.fandom.com/wiki/Raymond_Reddington",
+      "bio": "It is a criminal mastermind organization, making it to #4 and later to #1 on the FBI's Ten Most Wanted Fugitives, who suddenly turns itself in after 20+ years of evading the FBI.",
+      "appearance": [
+        {
+          "season": 7,
+          "episode": 3
+        },
+        {
+          "season": 8,
+          "episode": 19
+        }
+      ]
     },
     {
       "id": "dummy_004",
@@ -464,7 +519,8 @@
         "incarcerated": 10,
         "redacted": 10,
         "unknown": 5,
-        "captured": 5
+        "captured": 5,
+        "total": 50
       },
       "51-100": {
         "deceased": 10,
@@ -472,7 +528,8 @@
         "incarcerated": 10,
         "redacted": 10,
         "unknown": 5,
-        "captured": 5
+        "captured": 5,
+        "total": 50
       },
       "101-150": {
         "deceased": 10,
@@ -480,7 +537,8 @@
         "incarcerated": 10,
         "redacted": 10,
         "unknown": 5,
-        "captured": 6
+        "captured": 6,
+        "total": 51
       },
       "151-200": {
         "deceased": 10,
@@ -488,7 +546,8 @@
         "incarcerated": 10,
         "redacted": 10,
         "unknown": 5,
-        "captured": 6
+        "captured": 6,
+        "total": 51
       }
     },
     "v1v2Data": [

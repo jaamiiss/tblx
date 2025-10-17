@@ -9,29 +9,72 @@ const cache = require('memory-cache');
 const collectionName = process.env.COLLECTION_NAME;
 
 // Firebase Admin SDK - initialize safely
-let admin, db;
+let admin, db, DUMMY_DATA, logger, metrics, DEBUG_MODE;
 try {
-  admin = require('../../shared/config/firebase-cfg');
-  console.log('Firebase Admin apps:', admin.apps.length);
-  console.log('Collection name:', collectionName);
+  const firebaseConfig = require('../../shared/config/firebase-cfg');
+  admin = firebaseConfig.admin;
+  DUMMY_DATA = firebaseConfig.DUMMY_DATA;
+  logger = firebaseConfig.logger;
+  metrics = firebaseConfig.metrics;
+  DEBUG_MODE = firebaseConfig.DEBUG_MODE;
   
   if (admin.apps.length > 0) {
     db = admin.firestore();
-    console.log('Firestore database initialized successfully');
-} else {
-    console.log('Firebase Admin not initialized');
+  } else {
+    logger.warn('Firebase Admin not initialized');
     db = null;
   }
 } catch (error) {
   console.error('Failed to initialize Firebase:', error.message);
   admin = null;
   db = null;
+  DUMMY_DATA = null;
+  logger = { info: () => {}, debug: () => {}, error: console.error, warn: console.warn };
+  metrics = {};
+  DEBUG_MODE = false;
 }
 
 // Cache configuration
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes (increased from 5 minutes)
-const MASTER_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for master data
+const CACHE_DURATION = 60 * 60 * 1000; // 60 minutes (increased for better efficiency)
+const MASTER_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes for master data
 const QUOTA_ERROR_CODE = 'resource-exhausted';
+
+// Request deduplication - prevent multiple simultaneous requests for same data
+const pendingRequests = new Map();
+const REQUEST_TIMEOUT = 30000; // 30 seconds timeout for requests
+
+// Request throttling to prevent excessive Firebase usage
+const requestThrottle = new Map();
+const THROTTLE_WINDOW = 60000; // 1 minute window
+const MAX_REQUESTS_PER_WINDOW = 10; // Max 10 requests per minute per endpoint
+
+// Helper function to check request throttling
+function isRequestThrottled(endpoint) {
+  const now = Date.now();
+  const throttleKey = endpoint;
+  
+  if (!requestThrottle.has(throttleKey)) {
+    requestThrottle.set(throttleKey, []);
+  }
+  
+  const requests = requestThrottle.get(throttleKey);
+  
+  // Remove old requests outside the window
+  const validRequests = requests.filter(timestamp => now - timestamp < THROTTLE_WINDOW);
+  requestThrottle.set(throttleKey, validRequests);
+  
+  // Check if we're over the limit
+  if (validRequests.length >= MAX_REQUESTS_PER_WINDOW) {
+    logger.warn(`Request throttled for ${endpoint}: ${validRequests.length}/${MAX_REQUESTS_PER_WINDOW} requests in window`);
+    return true;
+  }
+  
+  // Add current request
+  validRequests.push(now);
+  requestThrottle.set(throttleKey, validRequests);
+  
+  return false;
+}
 
 // Helper function to safely access Firestore
 async function safeFirestoreQuery(queryFn) {
@@ -41,74 +84,7 @@ async function safeFirestoreQuery(queryFn) {
   return await queryFn();
 }
 
-// Load dummy data from JSON file
-let DUMMY_DATA = null;
-try {
-  const dummyDataPath = path.join(__dirname, '..', '..', 'shared', 'data', 'dummy-data.json');
-  const dummyDataRaw = fs.readFileSync(dummyDataPath, 'utf8');
-  DUMMY_DATA = JSON.parse(dummyDataRaw);
-  console.log('Dummy data loaded successfully from file');
-} catch (error) {
-  console.error('Error loading dummy data file:', error);
-  // Fallback to hardcoded data if file fails to load
-  DUMMY_DATA = {
-    version1: Array.from({ length: 5 }, (_, i) => ({
-      id: `dummy_${i}`,
-      name: `Person ${i + 1}`,
-      v1: i,
-      v2: i + 100,
-      status: ['deceased', 'active', 'incarcerated', 'redacted', 'unknown'][i % 5],
-      category: ['Male', 'Female', 'Company', 'Group'][i % 4]
-    })),
-    version2: Array.from({ length: 5 }, (_, i) => ({
-      id: `dummy_${i}`,
-      name: `Person ${i + 1}`,
-      v1: i,
-      v2: i + 100,
-      status: ['deceased', 'active', 'incarcerated', 'redacted', 'unknown'][i % 5],
-      category: ['Male', 'Female', 'Company', 'Group'][i % 4]
-    })),
-    stats: {
-      counts: { deceased: 1, active: 1, incarcerated: 1, redacted: 1, unknown: 1, total: 5 },
-      percentages: { deceased: "20.0", active: "20.0", incarcerated: "20.0", redacted: "20.0", unknown: "20.0" },
-      items: {
-        deceased: [{ id: 'dummy_0', name: 'Person 1', v1: 0, v2: 100, status: 'deceased' }],
-        active: [{ id: 'dummy_1', name: 'Person 2', v1: 1, v2: 101, status: 'active' }],
-        incarcerated: [{ id: 'dummy_2', name: 'Person 3', v1: 2, v2: 102, status: 'incarcerated' }],
-        redacted: [{ id: 'dummy_3', name: 'Person 4', v1: 3, v2: 103, status: 'redacted' }],
-        unknown: [{ id: 'dummy_4', name: 'Person 5', v1: 4, v2: 104, status: 'unknown' }]
-      },
-      v1Ranges: {
-        '0-50': { deceased: 1, active: 1, incarcerated: 1, redacted: 1, unknown: 1 },
-        '51-100': { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0 },
-        '101-150': { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0 },
-        '151-200': { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0 }
-      },
-      v1v2Data: [
-        { x: 15, y: 120, status: 'deceased', name: 'Person 1' },
-        { x: 45, y: 85, status: 'active', name: 'Person 2' },
-        { x: 78, y: 156, status: 'incarcerated', name: 'Person 3' },
-        { x: 112, y: 92, status: 'redacted', name: 'Person 4' },
-        { x: 145, y: 178, status: 'unknown', name: 'Person 5' },
-        { x: 23, y: 145, status: 'deceased', name: 'Person 6' },
-        { x: 67, y: 67, status: 'active', name: 'Person 7' },
-        { x: 89, y: 134, status: 'incarcerated', name: 'Person 8' },
-        { x: 134, y: 45, status: 'redacted', name: 'Person 9' },
-        { x: 167, y: 189, status: 'unknown', name: 'Person 10' },
-        { x: 34, y: 98, status: 'deceased', name: 'Person 11' },
-        { x: 56, y: 123, status: 'active', name: 'Person 12' },
-        { x: 98, y: 76, status: 'incarcerated', name: 'Person 13' },
-        { x: 123, y: 167, status: 'redacted', name: 'Person 14' },
-        { x: 156, y: 34, status: 'unknown', name: 'Person 15' },
-        { x: 12, y: 67, status: 'deceased', name: 'Person 16' },
-        { x: 78, y: 189, status: 'active', name: 'Person 17' },
-        { x: 134, y: 112, status: 'incarcerated', name: 'Person 18' },
-        { x: 189, y: 78, status: 'redacted', name: 'Person 19' },
-        { x: 45, y: 156, status: 'unknown', name: 'Person 20' }
-      ]
-    }
-  };
-}
+// Dummy data is now loaded from shared config
 
 // Helper function to check if error is quota related
 function isQuotaError(error) {
@@ -137,47 +113,128 @@ function reloadDummyData() {
 // Master data cache - single source of truth
 const MASTER_CACHE_KEY = 'master_data';
 
-// Get master data (single comprehensive fetch)
+// Get master data (single comprehensive fetch) with request deduplication
 async function getMasterData() {
-  const cachedData = cache.get(MASTER_CACHE_KEY);
+  const cacheKey = MASTER_CACHE_KEY;
+  
+  // Check cache first
+  const cachedData = cache.get(cacheKey);
   if (cachedData) {
-    console.log(`Master cache hit for ${MASTER_CACHE_KEY}`);
+    logger.debug(`Master cache hit for ${cacheKey}`);
     return cachedData;
   }
 
-  try {
-    console.log(`Master cache miss for ${MASTER_CACHE_KEY}, fetching from Firestore`);
-    const snapshot = await db.collection(collectionName).get();
-    
-    const items = [];
-        snapshot.forEach((doc) => {
-          const docData = doc.data();
-      items.push({
-            id: doc.id,
-            ...docData
-          });
-        });
-    
-    cache.put(MASTER_CACHE_KEY, items, MASTER_CACHE_DURATION);
-    console.log(`Master data cached: ${items.length} items`);
-    return items;
-  } catch (error) {
-    if (isQuotaError(error)) {
-      console.warn(`Quota exceeded for master data, using dummy data from file`);
-      return DUMMY_DATA.all || [];
-    }
-    throw error;
+  // Check if request is already pending
+  if (pendingRequests.has(cacheKey)) {
+    logger.debug(`Master data request already pending for ${cacheKey}, waiting...`);
+    return await pendingRequests.get(cacheKey);
   }
+
+  // Create new request promise
+  const requestPromise = (async () => {
+    try {
+      // Check request throttling
+      if (isRequestThrottled('master_data')) {
+        logger.warn('Master data request throttled, using cached data or dummy data');
+        const cachedData = cache.get(cacheKey);
+        if (cachedData) {
+          return cachedData;
+        }
+        return DUMMY_DATA.all || [];
+      }
+      
+      logger.info(`Master cache miss for ${cacheKey}, fetching from Firestore`);
+      const snapshot = await db.collection(collectionName).get();
+      
+      const items = [];
+      snapshot.forEach((doc) => {
+        const docData = doc.data();
+        items.push({
+          id: doc.id,
+          ...docData
+        });
+      });
+      
+      cache.put(cacheKey, items, MASTER_CACHE_DURATION);
+      logger.info(`Master data cached: ${items.length} items`);
+      return items;
+    } catch (error) {
+      if (isQuotaError(error)) {
+        console.warn(`Quota exceeded for master data, using dummy data from file`);
+        return DUMMY_DATA.all || [];
+      }
+      throw error;
+    } finally {
+      // Remove from pending requests
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store the promise and add timeout
+  pendingRequests.set(cacheKey, requestPromise);
+  
+  // Add timeout to prevent hanging requests
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      pendingRequests.delete(cacheKey);
+      reject(new Error('Request timeout'));
+    }, REQUEST_TIMEOUT);
+  });
+
+  return Promise.race([requestPromise, timeoutPromise]);
+}
+
+// Distribute data across 4 columns based on value ranges
+function distributeDataAcrossColumns(data, valueField) {
+  const columns = {
+    column1: [], // 0-50
+    column2: [], // 51-100
+    column3: [], // 101-150
+    column4: []  // 151-200
+  };
+  
+  data.forEach(item => {
+    const value = item[valueField];
+    if (value >= 0 && value <= 50) {
+      columns.column1.push(item);
+    } else if (value >= 51 && value <= 100) {
+      columns.column2.push(item);
+    } else if (value >= 101 && value <= 150) {
+      columns.column3.push(item);
+    } else if (value >= 151 && value <= 200) {
+      columns.column4.push(item);
+    }
+  });
+  
+  // Return as array of columns for frontend rendering
+  return [
+    columns.column1,
+    columns.column2,
+    columns.column3,
+    columns.column4
+  ];
 }
 
 // Generate derived data from master cache
 function generateDerivedData(masterData, dataType) {
   switch (dataType) {
     case 'version1':
-      return masterData.filter(item => item.v1 >= 0 && item.v1 <= 200);
+      // Filter and sort V1 data (0-200), then distribute across columns
+      const v1Data = masterData
+        .filter(item => item.v1 >= 0 && item.v1 <= 200)
+        .sort((a, b) => a.v1 - b.v1); // Sort by V1 value ascending
+      
+      // Distribute data across 4 columns (0-50, 51-100, 101-150, 151-200)
+      return distributeDataAcrossColumns(v1Data, 'v1');
     
     case 'version2':
-      return masterData.filter(item => item.v2 >= 0 && item.v2 <= 200);
+      // Filter and sort V2 data (0-200), then distribute across columns
+      const v2Data = masterData
+        .filter(item => item.v2 >= 0 && item.v2 <= 200)
+        .sort((a, b) => a.v2 - b.v2); // Sort by V2 value ascending
+      
+      // Distribute data across 4 columns (0-50, 51-100, 101-150, 151-200)
+      return distributeDataAcrossColumns(v2Data, 'v2');
     
     case 'status':
       const statusCounts = {
@@ -206,42 +263,69 @@ function generateDerivedData(masterData, dataType) {
   }
 }
 
-// Optimized function to get data from master cache or generate it
+// Optimized function to get data from master cache or generate it with deduplication
 async function getOptimizedData(dataType, specificFilter = null) {
   const cacheKey = specificFilter ? `${dataType}_${specificFilter}` : dataType;
   
   // Try derived cache first
   const derivedCache = cache.get(cacheKey);
   if (derivedCache) {
-    console.log(`Derived cache hit for ${cacheKey}`);
+    logger.debug(`Derived cache hit for ${cacheKey}`);
     return derivedCache;
   }
   
-  // Get master data (this is cached at master level)
-  const masterData = await getMasterData();
-  
-  // Generate derived data
-  let result;
-  if (specificFilter && dataType === 'status') {
-    result = masterData.filter(item => item.status === specificFilter);
-  } else {
-    result = generateDerivedData(masterData, dataType);
+  // Check if request is already pending for this specific data
+  if (pendingRequests.has(cacheKey)) {
+    logger.debug(`Request already pending for ${cacheKey}, waiting...`);
+    return await pendingRequests.get(cacheKey);
   }
   
-  // Cache the derived data with longer duration since it's derived from master cache
-  cache.put(cacheKey, result, CACHE_DURATION);
-  console.log(`Generated and cached ${dataType} data: ${Array.isArray(result) ? result.length : 'object'} items`);
+  // Create request promise
+  const requestPromise = (async () => {
+    try {
+      // Get master data (this is cached at master level)
+      const masterData = await getMasterData();
+      
+      // Generate derived data
+      let result;
+      if (specificFilter && dataType === 'status') {
+        result = masterData.filter(item => item.status === specificFilter);
+      } else {
+        result = generateDerivedData(masterData, dataType);
+      }
+      
+      // Cache the derived data with longer duration since it's derived from master cache
+      cache.put(cacheKey, result, CACHE_DURATION);
+      logger.debug(`Generated and cached ${dataType} data: ${Array.isArray(result) ? result.length : 'object'} items`);
+      
+      return result;
+    } finally {
+      // Remove from pending requests
+      pendingRequests.delete(cacheKey);
+    }
+  })();
+
+  // Store the promise
+  pendingRequests.set(cacheKey, requestPromise);
   
-  return result;
+  // Add timeout
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      pendingRequests.delete(cacheKey);
+      reject(new Error('Request timeout'));
+    }, REQUEST_TIMEOUT);
+  });
+
+  return Promise.race([requestPromise, timeoutPromise]);
 }
 
 // Cache warming function for seamless navigation
 async function warmRelatedCaches(dataType) {
-  console.log(`Warming related caches for ${dataType}`);
+  logger.debug(`Warming related caches for ${dataType}`);
   
   const masterData = cache.get(MASTER_CACHE_KEY);
   if (!masterData) {
-    console.log('No master data available for cache warming');
+    logger.debug('No master data available for cache warming');
     return;
   }
   
@@ -257,7 +341,7 @@ async function warmRelatedCaches(dataType) {
   for (const type of typesToWarm) {
     const cacheKey = type;
     if (!cache.get(cacheKey)) {
-      console.log(`Pre-generating cache for ${type}`);
+      logger.debug(`Pre-generating cache for ${type}`);
       const data = generateDerivedData(masterData, type);
       cache.put(cacheKey, data, CACHE_DURATION);
     }
@@ -268,7 +352,7 @@ async function warmRelatedCaches(dataType) {
   for (const status of commonStatuses) {
     const cacheKey = `status_${status}`;
     if (!cache.get(cacheKey)) {
-      console.log(`Pre-generating cache for status ${status}`);
+      logger.debug(`Pre-generating cache for status ${status}`);
       const data = masterData.filter(item => item.status === status);
       cache.put(cacheKey, data, CACHE_DURATION);
     }
@@ -282,14 +366,14 @@ function getSeamlessData(dataType, specificFilter = null) {
   // Check if we have this exact data cached
   const cachedData = cache.get(cacheKey);
   if (cachedData) {
-    console.log(`Seamless cache hit for ${cacheKey}`);
+    logger.debug(`Seamless cache hit for ${cacheKey}`);
     return cachedData;
   }
   
   // Check if we have master data and can generate this quickly
   const masterData = cache.get(MASTER_CACHE_KEY);
   if (masterData) {
-    console.log(`Generating ${cacheKey} from cached master data`);
+    logger.debug(`Generating ${cacheKey} from cached master data`);
     let result;
     if (specificFilter && dataType === 'status') {
       result = masterData.filter(item => item.status === specificFilter);
@@ -370,12 +454,52 @@ function generateStatsData(masterData) {
     }
   });
 
+  // Calculate V1 ranges data
+  const v1Ranges = {
+    "0-50": { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0, captured: 0, total: 0 },
+    "51-100": { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0, captured: 0, total: 0 },
+    "101-150": { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0, captured: 0, total: 0 },
+    "151-200": { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0, captured: 0, total: 0 },
+    "200+": { deceased: 0, active: 0, incarcerated: 0, redacted: 0, unknown: 0, captured: 0, total: 0 }
+  };
+
+  // Count items by V1 ranges
+  masterData.forEach(item => {
+    const v1Value = item.v1;
+    const status = (item.status || 'unknown').toLowerCase();
+    
+    if (v1Value !== undefined && v1Value !== null) {
+      let range;
+      if (v1Value >= 0 && v1Value <= 50) {
+        range = "0-50";
+      } else if (v1Value >= 51 && v1Value <= 100) {
+        range = "51-100";
+      } else if (v1Value >= 101 && v1Value <= 150) {
+        range = "101-150";
+      } else if (v1Value >= 151 && v1Value <= 200) {
+        range = "151-200";
+      } else if (v1Value > 200) {
+        range = "200+";
+      }
+      
+      if (range && v1Ranges[range]) {
+        v1Ranges[range].total++;
+        if (v1Ranges[range].hasOwnProperty(status)) {
+          v1Ranges[range][status]++;
+        } else {
+          v1Ranges[range].unknown++;
+        }
+      }
+    }
+  });
+
   return {
     counts: statusCounts,
     percentages: percentages,
     items: statusItems,
     categoryCounts: categoryCounts,
-    categoryPercentages: categoryPercentages
+    categoryPercentages: categoryPercentages,
+    v1Ranges: v1Ranges
   };
 }
 
@@ -384,12 +508,12 @@ async function getCachedData(cacheKey, fetchFunction) {
   // Try to get from cache first
   const cachedData = cache.get(cacheKey);
   if (cachedData) {
-    console.log(`Cache hit for ${cacheKey}`);
+    logger.debug(`Cache hit for ${cacheKey}`);
     return cachedData;
   }
 
   try {
-    console.log(`Cache miss for ${cacheKey}, fetching from Firestore`);
+    logger.debug(`Cache miss for ${cacheKey}, fetching from Firestore`);
     const data = await fetchFunction();
     cache.put(cacheKey, data, CACHE_DURATION);
     return data;
@@ -478,7 +602,7 @@ router.get('/the-blacklist', async (req, res) => {
     // If it's an HTMX request or API request, return JSON
     if (req.headers['hx-request'] || req.query.format === 'json') {
       res.json(data);
-      console.log(`Returned ${data.length} items for the-blacklist (JSON)`);
+      logger.debug(`Returned ${data.length} items for the-blacklist (JSON)`);
     } else {
       // Otherwise render the HTML page
       res.render('the-blacklist/index', {
@@ -515,7 +639,7 @@ router.get('/version1', async (req, res) => {
     warmRelatedCaches('version1');
     
     res.json(data);
-    console.log(`Returned ${data.length} items for version1`);
+    logger.debug(`Returned ${data.length} items for version1`);
   } catch (error) {
     console.error('Error in version1 route:', error);
     res.status(500).json({ error: 'Something went wrong' });
@@ -534,7 +658,7 @@ router.get('/version2', async (req, res) => {
     warmRelatedCaches('version2');
     
     res.json(data);
-    console.log(`Returned ${data.length} items for version2`);
+    logger.debug(`Returned ${data.length} items for version2`);
   } catch (error) {
     console.error('Error in version2 route:', error);
     res.status(500).json({ error: 'Something went wrong' });
@@ -543,74 +667,216 @@ router.get('/version2', async (req, res) => {
 
 // HTMX endpoint for stats cards
 router.get('/stats/cards', async (req, res) => {
+  console.log('Stats Cards: Endpoint called - checking data source...');
   try {
+    // TESTING: Simulate stats cards failure with ?test=fail parameter
+    if (req.query.test === 'fail') {
+      console.log('TESTING: Simulating stats cards failure');
+      return res.status(500).json({ error: 'Stats cards unavailable (TEST MODE)' });
+    }
+    
     const data = await getOptimizedData('stats');
 
-    // Return HTML for stats cards with optimized layout
-    const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+    // Get V1 ranges data (0-200, excluding 200+)
+    const v1Ranges = data.v1Ranges || {};
+    const v1RangesToInclude = ['0-50', '51-100', '101-150', '151-200']; // Exclude 200+
     
-    // Status cards in a balanced 3x2 grid
-    let html = '<div class="stats-cards-container">';
-    html += '<div class="status-cards-grid">';
+    // Calculate V1-specific totals (0-200 range)
+    let v1Total = 0;
+    let v1Active = 0;
+    let v1Deceased = 0;
+    
+    v1RangesToInclude.forEach(range => {
+      if (v1Ranges[range]) {
+        v1Total += v1Ranges[range].total || 0;
+        v1Active += v1Ranges[range].active || 0;
+        v1Deceased += v1Ranges[range].deceased || 0;
+      }
+    });
+    
+    const lastUpdated = new Date().toLocaleString();
+    
+    // Calculate V1-specific counts for each status (0-200 range only)
+    const statuses = ['active', 'deceased', 'incarcerated', 'redacted', 'unknown', 'captured'];
+    const v1Counts = {};
+    const v1Percentages = {};
     
     statuses.forEach(status => {
-      html += `
+      v1Counts[status] = 0;
+      v1RangesToInclude.forEach(range => {
+        if (v1Ranges[range]) {
+          v1Counts[status] += v1Ranges[range][status] || 0;
+        }
+      });
+      // Calculate percentage based on V1 total
+      v1Percentages[status] = v1Total > 0 ? ((v1Counts[status] / v1Total) * 100).toFixed(1) : '0.0';
+    });
+    
+    // Return HTML for status cards grid (showing V1-specific data)
+    let statusCardsHtml = '';
+    statuses.forEach(status => {
+      statusCardsHtml += `
         <div class="stat-card ${status}" onclick="window.location.href='/list/${status}'">
-          <div class="stat-number">${data.counts[status]}</div>
+          <div class="stat-number">${v1Counts[status] || 0}</div>
           <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
-          <div class="stat-percentage">${data.percentages[status]}%</div>
+          <div class="stat-percentage">${v1Percentages[status] || '0.0'}%</div>
         </div>
       `;
     });
     
-    html += '</div>';
-    
-    // Total card separated and centered
-    html += `
-      <div class="total-card-container">
-        <div class="stat-card total">
-          <div class="stat-number">${data.counts.total}</div>
-          <div class="stat-label">Total</div>
-          <div class="stat-percentage">100%</div>
+    const html = `
+      <div class="stats-cards-container">
+        <div class="status-cards-grid">
+          ${statusCardsHtml}
+        </div>
+        
+        <!-- Total card separated and centered -->
+        <div class="total-card-container">
+          <div class="stat-card total">
+            <div class="stat-number">${v1Total}</div>
+            <div class="stat-label">Total</div>
+            <div class="stat-percentage">100%</div>
+          </div>
         </div>
       </div>
-    </div>
     `;
     
     res.send(html);
-    console.log(`Returned stats cards HTML with ${data.counts.total} total items`);
+    logger.debug(`✅ LIVE DATA: Returned V1 status cards HTML with ${v1Total} V1 items (0-200 range)`);
+    console.log(`Stats Cards: ✅ Using LIVE data - V1 Total: ${v1Total}, V1 Active: ${v1Active}, V1 Deceased: ${v1Deceased}`);
   } catch (error) {
     console.error('Error in stats/cards route:', error);
     
-    // Return error HTML for HTMX
-    const errorHtml = `
-      <div class="htmx-error">
-        <div class="error-icon">⚠️</div>
-        <div class="error-title">Update Failed</div>
-        <div class="error-message">Unable to refresh statistics. Please try again.</div>
-        <button class="retry-button" onclick="htmx.trigger('#statsCards', 'htmx:trigger')">
-          Retry
-        </button>
-      </div>
-    `;
+    // Fallback to dummy data when live data fails
+    console.log('Stats Cards: 🔄 Falling back to DUMMY data due to error');
     
-    res.status(500).send(errorHtml);
+    try {
+      const dummyData = DUMMY_DATA.stats || {};
+      const dummyV1Ranges = dummyData.v1Ranges || {};
+      const v1RangesToInclude = ['0-50', '51-100', '101-150', '151-200']; // Exclude 200+
+      
+      // Calculate V1-specific totals from dummy data
+      let dummyV1Total = 0;
+      let dummyV1Active = 0;
+      let dummyV1Deceased = 0;
+      
+      v1RangesToInclude.forEach(range => {
+        if (dummyV1Ranges[range]) {
+          dummyV1Total += dummyV1Ranges[range].total || 0;
+          dummyV1Active += dummyV1Ranges[range].active || 0;
+          dummyV1Deceased += dummyV1Ranges[range].deceased || 0;
+        }
+      });
+      
+      const statuses = ['active', 'deceased', 'incarcerated', 'redacted', 'unknown', 'captured'];
+      const dummyV1Counts = {};
+      const dummyV1Percentages = {};
+      
+      statuses.forEach(status => {
+        dummyV1Counts[status] = 0;
+        v1RangesToInclude.forEach(range => {
+          if (dummyV1Ranges[range]) {
+            dummyV1Counts[status] += dummyV1Ranges[range][status] || 0;
+          }
+        });
+        dummyV1Percentages[status] = dummyV1Total > 0 ? ((dummyV1Counts[status] / dummyV1Total) * 100).toFixed(1) : '0.0';
+      });
+      
+      const lastUpdated = new Date().toLocaleString();
+      
+      // Return HTML for status cards grid (showing V1-specific dummy data)
+      let statusCardsHtml = '';
+      statuses.forEach(status => {
+        statusCardsHtml += `
+          <div class="stat-card ${status}" onclick="window.location.href='/list/${status}'">
+            <div class="stat-number">${dummyV1Counts[status] || 0}</div>
+            <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+            <div class="stat-percentage">${dummyV1Percentages[status] || '0.0'}%</div>
+          </div>
+        `;
+      });
+      
+      const dummyHtml = `
+        <div class="stats-cards-container">
+          <div class="status-cards-grid">
+            ${statusCardsHtml}
+          </div>
+          
+          <!-- Total card separated and centered -->
+          <div class="total-card-container">
+            <div class="stat-card total">
+              <div class="stat-number">${dummyV1Total}</div>
+              <div class="stat-label">Total</div>
+              <div class="stat-percentage">100%</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      res.send(dummyHtml);
+      console.log(`Stats Cards: 🔄 Using DUMMY data - V1 Total: ${dummyV1Total}, V1 Active: ${dummyV1Active}, V1 Deceased: ${dummyV1Deceased}`);
+    } catch (dummyError) {
+      console.error('Error loading dummy data for stats cards:', dummyError);
+      
+      // Return error HTML for HTMX as last resort
+      const errorHtml = `
+        <div class="htmx-error">
+          <div class="error-icon">⚠️</div>
+          <div class="error-title">Update Failed</div>
+          <div class="error-message">Unable to refresh statistics. Please try again.</div>
+          <button class="retry-button" onclick="htmx.trigger('#statsCards', 'htmx:trigger')">
+            Retry
+          </button>
+        </div>
+      `;
+      
+      res.status(500).send(errorHtml);
+    }
   }
 });
 
 // HTMX endpoints for individual charts
 router.get('/stats/chart/pie', async (req, res) => {
   try {
+    // TESTING: Simulate chart failure with ?test=fail parameter
+    if (req.query.test === 'fail') {
+      console.log('TESTING: Simulating pie chart failure');
+      return res.status(500).json({ error: 'Chart data unavailable (TEST MODE)' });
+    }
+    
     console.log('Pie chart endpoint called');
     const statsData = await getOptimizedData('stats');
     console.log('Stats data received:', statsData);
     
-    // Extract category data for pie chart
+    // Extract V1-specific category data for pie chart (0-200 range only)
+    const v1Ranges = statsData.v1Ranges || {};
+    const v1RangesToInclude = ['0-50', '51-100', '101-150', '151-200']; // Exclude 200+
+    
+    // Calculate V1-specific category counts
+    const v1CategoryCounts = { Male: 0, Female: 0, Company: 0, Group: 0, Unknown: 0 };
+    
+    // Get master data to calculate V1 category counts
+    const masterData = await getMasterData();
+    const v1Items = masterData.filter(item => {
+      const v1 = item.v1 || 0;
+      return v1 >= 0 && v1 <= 200; // Only V1 range 0-200
+    });
+    
+    v1Items.forEach(item => {
+      const category = item.category || 'Unknown';
+      if (v1CategoryCounts.hasOwnProperty(category)) {
+        v1CategoryCounts[category]++;
+      } else {
+        v1CategoryCounts.Unknown++;
+      }
+    });
+    
     const data = {
-      Male: statsData.categoryCounts.Male || 0,
-      Female: statsData.categoryCounts.Female || 0,
-      Company: statsData.categoryCounts.Company || 0,
-      Group: statsData.categoryCounts.Group || 0
+      Male: v1CategoryCounts.Male || 0,
+      Female: v1CategoryCounts.Female || 0,
+      Company: v1CategoryCounts.Company || 0,
+      Group: v1CategoryCounts.Group || 0,
+      Unknown: v1CategoryCounts.Unknown || 0
     };
     
     console.log('Pie chart data prepared:', data);
@@ -625,15 +891,16 @@ router.get('/stats/chart/bar', async (req, res) => {
   try {
     const statsData = await getOptimizedData('stats');
     
-    // Extract status data for bar chart
-    const data = {
-      deceased: statsData.counts.deceased || 0,
-      active: statsData.counts.active || 0,
-      incarcerated: statsData.counts.incarcerated || 0,
-      redacted: statsData.counts.redacted || 0,
-      unknown: statsData.counts.unknown || 0,
-      captured: statsData.counts.captured || 0
-    };
+    // Return V1 ranges data for bar chart (exclude 200+ range)
+    const v1Ranges = statsData.v1Ranges || {};
+    const v1RangesToInclude = ['0-50', '51-100', '101-150', '151-200']; // Exclude 200+
+    
+    const data = {};
+    v1RangesToInclude.forEach(range => {
+      if (v1Ranges[range]) {
+        data[range] = v1Ranges[range];
+      }
+    });
 
     res.json(data);
   } catch (error) {
@@ -647,8 +914,13 @@ router.get('/stats/chart/scatter', async (req, res) => {
     console.log('Scatter chart endpoint called');
     const masterData = await getMasterData();
     
-    // Prepare scatter data (v1 vs v2 values)
-    const items = masterData.map(item => ({
+    // Prepare V1-specific scatter data (v1 vs v2 values for V1 range 0-200 only)
+    const v1Items = masterData.filter(item => {
+      const v1 = item.v1 || 0;
+      return v1 >= 0 && v1 <= 200; // Only V1 range 0-200
+    });
+    
+    const items = v1Items.map(item => ({
       v1: item.v1 || 0,
       v2: item.v2 || 0,
       name: item.name || 'Unknown',
@@ -698,7 +970,7 @@ router.get('/version1/:status', async (req, res) => {
     });
 
     res.json(data);
-    console.log(`Returned ${data.length} items for status: ${status}`);
+    logger.debug(`Returned ${data.length} items for status: ${status}`);
   } catch (error) {
     console.error('Error in version1/:status route:', error);
     res.status(500).json({ error: 'Something went wrong' });
@@ -722,6 +994,18 @@ router.get('/test', (req, res) => {
 router.get('/quota-status', async (req, res) => {
   try {
     console.log('Quota status endpoint called');
+    
+    // TESTING: Simulate quota exceeded with ?test=quota parameter or FORCE_DEMO_MODE env var
+    if (req.query.test === 'quota' || process.env.FORCE_DEMO_MODE === 'true') {
+      console.log('TESTING: Simulating quota exceeded');
+      return res.json({
+        status: 'exceeded',
+        message: 'Firestore quota exceeded (TEST MODE)',
+        canUseFirestore: false,
+        fallbackAvailable: true,
+        testMode: true
+      });
+    }
     
     // Check if Firestore is available
     if (!db || !collectionName) {
@@ -834,7 +1118,7 @@ router.get('/status/:status', async (req, res) => {
       res.json(data);
     }
     
-    console.log(`Returned ${data.length} items for status page: ${status}`);
+    logger.debug(`Returned ${data.length} items for status page: ${status}`);
   } catch (error) {
     console.error('Error in status/:status route:', error);
     if (req.headers['hx-request']) {
@@ -937,6 +1221,114 @@ router.get('/dummy-data-info', (req, res) => {
   } catch (error) {
     console.error('Error getting dummy data info:', error);
     res.status(500).json({ error: 'Failed to get dummy data info' });
+  }
+});
+
+// Endpoint to get actual dummy data for demo mode
+router.get('/dummy-data/:type', (req, res) => {
+  try {
+    const { type } = req.params;
+    
+    if (!DUMMY_DATA) {
+      return res.status(404).json({ error: 'Dummy data not available' });
+    }
+    
+    let data;
+    switch (type) {
+      case 'version1':
+      case 'v1':
+        data = DUMMY_DATA.version1 || [];
+        break;
+      case 'version2':
+      case 'v2':
+        data = DUMMY_DATA.version2 || [];
+        break;
+      case 'stats': // Added for stats cards
+        // Return V1-specific stats from dummy data (0-200 range)
+        const dummyStats = DUMMY_DATA.stats || {};
+        const dummyV1Ranges = dummyStats.v1Ranges || {};
+        const dummyV1RangesToInclude = ['0-50', '51-100', '101-150', '151-200']; // Exclude 200+
+        
+        let dummyV1Total = 0;
+        const dummyV1Counts = {};
+        const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+        
+        // Calculate V1 totals
+        dummyV1RangesToInclude.forEach(range => {
+          if (dummyV1Ranges[range]) {
+            dummyV1Total += dummyV1Ranges[range].total || 0;
+          }
+        });
+        
+        // Calculate V1 counts for each status
+        statuses.forEach(status => {
+          dummyV1Counts[status] = 0;
+          dummyV1RangesToInclude.forEach(range => {
+            if (dummyV1Ranges[range]) {
+              dummyV1Counts[status] += dummyV1Ranges[range][status] || 0;
+            }
+          });
+        });
+        
+        data = {
+          v1Total: dummyV1Total,
+          v1Counts: dummyV1Counts,
+          v1Ranges: dummyV1Ranges
+        };
+        console.log(`Stats Cards: 🔄 Using DUMMY data - V1 Total: ${dummyV1Total}, V1 Active: ${dummyV1Counts.active || 0}, V1 Deceased: ${dummyV1Counts.deceased || 0}`);
+        break;
+      case 'pie':
+        // Return V1-specific category counts from dummy data
+        const pieDummyStats = DUMMY_DATA.stats || {};
+        const pieDummyV1Ranges = pieDummyStats.v1Ranges || {};
+        const pieDummyV1RangesToInclude = ['0-50', '51-100', '101-150', '151-200']; // Exclude 200+
+        
+        // Calculate V1-specific category counts from dummy data
+        const pieDummyV1CategoryCounts = { Male: 0, Female: 0, Company: 0, Group: 0, Unknown: 0 };
+        
+        // Simulate V1 category distribution (different from full database)
+        pieDummyV1CategoryCounts.Male = 105; // V1-specific count
+        pieDummyV1CategoryCounts.Female = 32; // V1-specific count  
+        pieDummyV1CategoryCounts.Company = 24; // V1-specific count
+        pieDummyV1CategoryCounts.Group = 30; // V1-specific count
+        pieDummyV1CategoryCounts.Unknown = 10; // V1-specific count
+        
+        data = pieDummyV1CategoryCounts;
+        break;
+        case 'bar':
+          data = DUMMY_DATA.stats ? DUMMY_DATA.stats.v1Ranges : {};
+          break;
+      case 'scatter':
+        // Return V1-specific scatter data (items with v1 range 0-200 only)
+        const dummyScatterItems = [];
+        if (DUMMY_DATA.stats && DUMMY_DATA.stats.items) {
+          // Flatten all status arrays and filter for V1 range 0-200
+          Object.values(DUMMY_DATA.stats.items).forEach(statusArray => {
+            if (Array.isArray(statusArray)) {
+              statusArray.forEach(item => {
+                const v1 = item.v1 || 0;
+                if (v1 >= 0 && v1 <= 200) {
+                  dummyScatterItems.push({
+                    v1: item.v1 || 0,
+                    v2: item.v2 || 0,
+                    name: item.name || 'Unknown',
+                    status: item.status || 'unknown'
+                  });
+                }
+              });
+            }
+          });
+        }
+        data = { items: dummyScatterItems };
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid data type' });
+    }
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error getting dummy data:', error);
+    res.status(500).json({ error: 'Failed to get dummy data' });
   }
 });
 

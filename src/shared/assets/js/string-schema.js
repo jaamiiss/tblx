@@ -91,6 +91,23 @@ class StringSchema {
     return labels[type] || labels.default;
   }
 
+  // Status messages
+  getStatusMessage(type = 'default', options = {}) {
+    const messages = {
+      default: 'Status message',
+      quotaExceeded: 'Database Quota Exceeded',
+      quotaMessage: 'We\'ve reached our database read limit. Please try again later or contact support.',
+      quotaNote: 'Demo data is available as a fallback.',
+      demoMode: 'Demo Mode Active',
+      liveData: 'Live Data Available',
+      offline: 'Offline Mode',
+      loading: 'Loading...',
+      error: 'Error occurred',
+      success: 'Success'
+    };
+    return messages[type] || messages.default;
+  }
+
   // Page titles
   getPageTitle(page = 'default') {
     const titles = {

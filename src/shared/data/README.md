@@ -34,11 +34,11 @@ The `dummy-data.json` file contains comprehensive sample data organized by endpo
 - **Purpose**: Complete statistics data for analytics
 - **Content**: Comprehensive statistics including:
   - `counts` - Status counts (deceased, active, incarcerated, etc.)
-  - `percentages` - Status percentages
-  - `items` - Items grouped by status
+- `percentages` - Status percentages
+- `items` - Items grouped by status
   - `categoryCounts` - Category distribution (Male, Female, Company, Group)
   - `categoryPercentages` - Category percentages
-  - `v1Ranges` - Data grouped by V1 number ranges
+- `v1Ranges` - Data grouped by V1 number ranges
   - `v1v2Data` - Scatter plot data for V1 vs V2 visualization
 
 ## Demo Mode Integration

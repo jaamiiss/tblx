@@ -18,14 +18,7 @@
 <% } else if (typeof status !== 'undefined' && status) { %>
   <div class="toggle-description-container">
     <div class="toggle-description">
-      <strong>Status:</strong> Filtered by <%= status || 'unknown' %> status
+      <strong>Status</strong>
     </div>
   </div>
 <% } %>
-
-<!-- Demo Data Button -->
-<div id="demo-button-container" style="text-align: center; margin: 20px 0; display: none;">
-  <button onclick="loadDummyDataManually()" class="fallback-button">
-    Load Demo Data
-  </button>
-</div>

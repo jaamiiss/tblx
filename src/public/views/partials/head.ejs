@@ -6,16 +6,111 @@
   <title><%= title %> | The Blacklist</title>
   <meta name="description" content="HTMX, Express, & Firestore">            
   <link rel="icon" href="/assets/favicon.ico">
-  <link rel="stylesheet" href="/assets/css/style.css">
+  
+  <!-- Preload critical resources -->
+  <% if (typeof preloadFonts !== 'undefined' && preloadFonts) { %>
+  <% } %>
+  
+  <!-- DNS prefetch for external resources -->
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+  
+  <link rel="stylesheet" href="/assets/css/style.css?v=<%= Date.now() %>">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
-  <!-- Global Scripts -->
+  <!-- Core Scripts - Always Loaded -->
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.js" integrity="sha384-yWakaGAFicqusuwOYEmoRjLNOC+6OFsdmwC2lbGQaRELtuVEqNzt11c2J711DeCZ" crossorigin="anonymous"></script>
+  
+  <!-- Conditional Scripts -->
   <% if (typeof includeChartJS !== 'undefined' && includeChartJS) { %>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
   <% } %>
-  <script src="/assets/js/string-schema.js"></script>
-  <script src="/assets/js/demo-manager.js"></script>
-  <script src="/assets/js/quota-message-helper.js"></script>
-  <script src="/assets/js/item-renderer.js"></script>
+  
+  <% if (typeof includeGSAP !== 'undefined' && includeGSAP) { %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-16esztaSRplJROstbIIdwX3N97V1+pZvV33ABoG1H2OyTttBxEGkTsoIVsiP1iaTtM8b3+hu2kB6pQ4Clr5yug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" integrity="sha512-Ic9xkERjyZ1xgJ5svx3y0u3xrvfT/uPkV99LBwe68xjy/mGtO+4eURHZBW2xW4SZbFrF1Tf090XqB+EVgXnVjw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <% } %>
+  
+  <% if (typeof includeAnalytics !== 'undefined' && includeAnalytics) { %>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6WCN3QXN8W"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6WCN3QXN8W');
+  </script>
+  <% } %>
+  
+  <!-- Essential Scripts - Always Loaded -->
+  <script src="/assets/js/core/header-optimizer.js"></script>
+  <script src="/shared/assets/js/string-schema.js"></script>
+  <script src="/assets/js/core/font-manager.js"></script>
+  
+  <!-- Optional Scripts -->
+  <% if (typeof includePerformanceMonitor !== 'undefined' && includePerformanceMonitor) { %>
+  <script src="/assets/js/core/performance-monitor.js"></script>
+  <% } %>
+  
+  <% if (typeof includeDemoManager !== 'undefined' && includeDemoManager) { %>
+  <script src="/assets/js/managers/log-manager.js?v=<%= Date.now() %>"></script>
+  <script src="/assets/js/managers/spinner-manager.js?v=<%= Date.now() %>"></script>
+  <script src="/assets/js/managers/htmx-manager.js?v=<%= Date.now() %>"></script>
+  <script src="/assets/js/managers/demo-manager.js?v=<%= Date.now() %>"></script>
+  <script src="/assets/js/utils/quota-message-helper.js?v=<%= Date.now() %>"></script>
+  <% } %>
+  
+  <% if (typeof includeItemRenderer !== 'undefined' && includeItemRenderer) { %>
+  <script src="/shared/assets/js/item-renderer.js"></script>
+  <% } %>
+  
+  <!-- CDN Fallback Script -->
+  <script>
+    // CDN Fallback System
+    window.cdnFallbacks = {
+      htmx: 'https://unpkg.com/htmx.org@2.0.7/dist/htmx.js',
+      chartjs: 'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.js',
+      gsap: 'https://unpkg.com/gsap@3.12.2/dist/gsap.min.js',
+      scrollTrigger: 'https://unpkg.com/gsap@3.12.2/dist/ScrollTrigger.min.js'
+    };
+    
+    // Check if HTMX loaded successfully
+    if (typeof htmx === 'undefined') {
+      console.warn('HTMX failed to load from CDN, loading fallback...');
+      const script = document.createElement('script');
+      script.src = window.cdnFallbacks.htmx;
+      document.head.appendChild(script);
+    }
+    
+    // Check if Chart.js loaded successfully (if required)
+    <% if (typeof includeChartJS !== 'undefined' && includeChartJS) { %>
+    if (typeof Chart === 'undefined') {
+      console.warn('Chart.js failed to load from CDN, loading fallback...');
+      const script = document.createElement('script');
+      script.src = window.cdnFallbacks.chartjs;
+      document.head.appendChild(script);
+    }
+    <% } %>
+    
+    // Check if GSAP loaded successfully (if required)
+    <% if (typeof includeGSAP !== 'undefined' && includeGSAP) { %>
+    if (typeof gsap === 'undefined') {
+      console.warn('GSAP failed to load from CDN, loading fallback...');
+      const script = document.createElement('script');
+      script.src = window.cdnFallbacks.gsap;
+      document.head.appendChild(script);
+    }
+    <% } %>
+  </script>
+  
+  <!-- SVG Support Detection -->
+  <script>
+    // Detect SVG support and add appropriate class
+    (function() {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      if (!svg.getAttributeNS) {
+        document.documentElement.className += ' no-svg';
+      }
+    })();
+  </script>
 </head>

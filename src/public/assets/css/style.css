@@ -76,7 +76,7 @@ body:not(.home) {
 }
 
 h1 {
-    font-family: 'TBL', Arial, Helvetica, sans-serif;
+    font-family: 'TBL', 'TBL-Fallback', Arial, Helvetica, sans-serif;
     text-transform: uppercase;
 }
 
@@ -104,6 +104,17 @@ body:not(.home) .link:hover {
     align-items: center;
     margin-bottom: 20px;
     position: relative;
+    /* Prevent layout shift during font loading */
+    min-height: 60px;
+}
+
+.main-header h1 {
+    /* Ensure consistent height during font loading */
+    font-size: 2rem;
+    line-height: 1.2;
+    margin: 0;
+    /* Fallback font stack */
+    font-family: 'TBL', 'Arial Black', Arial, Helvetica, sans-serif;
 }
 
 .confidential-stamp {
@@ -111,7 +122,7 @@ body:not(.home) .link:hover {
     color: white;
     padding: 8px 16px;
     border-radius: 4px;
-    font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+    font-family: 'TBL-2', 'Courier New', monospace;
     font-size: 12px;
     font-weight: bold;
     text-transform: uppercase;
@@ -120,6 +131,9 @@ body:not(.home) .link:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     transform: rotate(-2deg);
     position: relative;
+    /* Prevent layout shift */
+    min-width: 150px;
+    text-align: center;
 }
 
 .confidential-stamp::before {
@@ -155,7 +169,7 @@ body:not(.home) .link:hover {
     border: 2px solid #FE0000;
     color: #FE0000;
     text-decoration: none;
-    font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+    font-family: 'TBL-2', 'TBL-2-Fallback', Arial, Helvetica, sans-serif;
     text-transform: uppercase;
     font-size: 14px;
     font-weight: 600;
@@ -187,7 +201,7 @@ body:not(.home) .link:hover {
     font-size: 12px;
     color: #666;
     line-height: 1.3;
-    font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+    font-family: 'TBL-2', 'TBL-2-Fallback', Arial, Helvetica, sans-serif;
     text-align: center;
     max-width: 300px;
 }
@@ -266,12 +280,46 @@ body:not(.home) .link:hover {
     flex-direction: column;
 }
 
+.column-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 1px solid #333;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.column-header h3 {
+    margin: 0 0 4px 0;
+    font-family: 'TBL', 'TBL-Fallback', Arial Black, Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #FE0000;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.column-count {
+    font-family: 'TBL-2', 'TBL-2-Fallback', monospace;
+    font-size: 12px;
+    color: #ccc;
+    font-weight: 500;
+}
+
+.column-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 8px;
+}
+
 .list-item {
     display: flex;
     align-items: center;
     padding: 6px 8px;
     border-radius: 3px;
-    font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+    font-family: 'TBL-2', 'TBL-2-Fallback', Arial, Helvetica, sans-serif;
     text-transform: uppercase;
     font-size: 13px;
     font-weight: 500;
@@ -368,16 +416,103 @@ body:not(.home) .link:hover {
 }
 
 
+/* Font Loading Optimizations with Local First + CDN Fallback */
 @font-face {
-    font-family: TBL-2;
-    src: url('https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/OCR%20A%20Std%20Regular.ttf');
+    font-family: TBL;
+    src: url('/shared/assets/fonts/Blacklisted.woff2') format('woff2'),
+         url('/shared/assets/fonts/Blacklisted.woff') format('woff');
     font-display: swap;
+    font-weight: normal;
+    font-style: normal;
 }
 
 @font-face {
-    font-family: TBL;
-    src: url('https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/Blacklisted.ttf');
+    font-family: TBL-2;
+    src: url('/shared/assets/fonts/OCR A Std Regular.ttf') format('truetype');
     font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* System Font Fallbacks */
+@font-face {
+    font-family: 'TBL-Fallback';
+    src: local('Arial'), local('Helvetica'), local('sans-serif');
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'TBL-2-Fallback';
+    src: local('Courier New'), local('monospace');
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Header Loading States with Font Fallbacks */
+body:not(.fonts-loaded) .main-header h1,
+body:not(.fonts-loaded) .main-header .confidential-stamp {
+    font-family: 'TBL-Fallback', Arial, Helvetica, sans-serif;
+    opacity: 0.9;
+}
+
+body.fonts-loaded .main-header h1,
+body.fonts-loaded .main-header .confidential-stamp {
+    font-family: 'TBL', 'TBL-Fallback', Arial, Helvetica, sans-serif;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+body.fonts-fallback .main-header h1,
+body.fonts-fallback .main-header .confidential-stamp {
+    font-family: 'TBL-Fallback', Arial, Helvetica, sans-serif;
+    opacity: 1;
+}
+
+/* Header Loading Animation */
+.main-header {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+body:not(.header-loaded) .main-header {
+    opacity: 0.8;
+    transform: translateY(-5px);
+}
+
+/* Prevent Layout Shift */
+.main-header h1 {
+    min-height: 1.2em;
+    line-height: 1.2;
+}
+
+.main-header .confidential-stamp {
+    min-height: 1em;
+    line-height: 1;
+}
+
+/* Loading State Indicators */
+.header-loading {
+    position: relative;
+}
+
+.header-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }
 
 @media only screen and (max-width: 1200px) {
@@ -460,13 +595,13 @@ body:not(.home) .link:hover {
     }
 }
 
-/* Spinner for HTMX loading indicator */
+/* Classic Red Spinner for HTMX loading indicator */
 #spinner {
     display: none;
     text-align: center;
     padding: 40px 20px;
     color: #FE0000;
-    font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+    font-family: TBL-2, 'TBL-2-Fallback', monospace;
     text-transform: uppercase;
     font-size: 14px;
     position: fixed;
@@ -474,15 +609,217 @@ body:not(.home) .link:hover {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1000;
+    background: transparent;
+    min-width: 200px;
+}
+
+/* Red spinner animation */
+#spinner::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #FE0000;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Enhanced loading content for progressive loading */
+.loading-content {
+    text-align: center;
+    max-width: 300px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(102, 102, 102, 0.3);
+    border-top: 3px solid #666;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.loading-text {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #FE0000;
+    font-weight: bold;
+}
+
+.loading-progress {
+    width: 100%;
+    background: rgba(254, 0, 0, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    height: 20px;
+    border: 1px solid rgba(254, 0, 0, 0.3);
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #FE0000, #ff4444);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: #FE0000;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
 
 #spinner.htmx-request {
-    display: block;
+    display: flex !important;
 }
 
 /* Force hide spinner when content is loaded */
 #spinner.content-loaded {
     display: none !important;
+}
+
+/* Status page spinner - branding red style */
+#loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    color: #FE0000;
+    font-family: TBL-2, 'TBL-2-Fallback', monospace;
+    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: bold;
+    background: transparent;
+}
+
+#loading-spinner.htmx-request {
+    display: block !important;
+}
+
+#loading-spinner::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(254, 0, 0, 0.3);
+    border-top: 2px solid #FE0000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Chart loading spinners - branding red style */
+.chart-loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    color: #FE0000;
+    font-family: TBL-2, 'TBL-2-Fallback', monospace;
+    text-transform: uppercase;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 10;
+    border-radius: 8px;
+}
+
+.chart-loading-spinner::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(254, 0, 0, 0.3);
+    border-top: 2px solid #FE0000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.chart-loading-spinner.hidden {
+    display: none !important;
+}
+
+/* Progressive Item Loading Animation */
+.list-item-loading {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Demo Button Styling */
+#demo-button-container {
+    text-align: center;
+    margin: 20px 0;
+    padding: 20px;
+}
+
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+/* Demo Data Unavailable Styling */
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-family: TBL-2, 'TBL-2-Fallback', monospace;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.no-data::before {
+  content: "⚠️";
+  display: block;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.no-data strong {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+/* Demo Mode Controls - Clean Brand Design */
+/* Removed - using global demo banner instead */
+
+/* Stats Page Specific Demo Indicator Styling */
+/* Removed - using global demo banner instead */
+
+/* Ensure demo indicators are visible on stats page */
+.stats-cards {
+  position: relative;
+  z-index: 1;
 }
 
 /* Reduce opacity of parent containers when spinner is active */
@@ -530,30 +867,7 @@ body:not(.home) .link:hover {
     transition: opacity 0.3s ease;
 }
 
-/* Ensure spinner is visible over content */
-#spinner {
-    background: transparent;
-    border-radius: 8px;
-}
-
-#spinner::after {
-    content: '';
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #FE0000;
-    border-radius: 50%;
-    border-top-color: transparent;
-    animation: spin 1s linear infinite;
-    margin-left: 10px;
-    vertical-align: middle;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
+/* Ensure spinner is visible over content - removed conflicting styles */
 
 /* ===== STATUS PAGE STYLES ===== */
 
@@ -651,7 +965,7 @@ body:not(.home) .link:hover {
   background: white;
   border: none !important;
   border-radius: 4px;
-  padding: 0;
+  padding: 0 0.5rem;
   transition: all 0.3s ease;
   margin-top: 10px;
 }
@@ -853,6 +1167,114 @@ body:not(.home) .link:hover {
   text-align: left;
 }
 
+.legend-toggle {
+  background: rgba(254, 0, 0, 0.1);
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #dc2626;
+}
+
+.legend-toggle:hover {
+  background: rgba(254, 0, 0, 0.2);
+  border-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.legend-toggle:active {
+  transform: translateY(0);
+  background: rgba(254, 0, 0, 0.3);
+}
+
+.legend-icon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.legend-toggle:hover .legend-icon {
+  transform: scale(1.1);
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoom-reset {
+  background: rgba(254, 0, 0, 0.1);
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #dc2626;
+}
+
+.zoom-reset:hover {
+  background: rgba(254, 0, 0, 0.2);
+  border-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.zoom-reset:active {
+  transform: translateY(0);
+  background: rgba(254, 0, 0, 0.3);
+}
+
+.reset-icon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.zoom-reset:hover .reset-icon {
+  transform: scale(1.1);
+}
+
+.zoom-in, .zoom-out {
+  background: rgba(254, 0, 0, 0.1);
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #dc2626;
+}
+
+.zoom-in:hover, .zoom-out:hover {
+  background: rgba(254, 0, 0, 0.2);
+  border-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.zoom-in:active, .zoom-out:active {
+  transform: translateY(0);
+  background: rgba(254, 0, 0, 0.3);
+}
+
+.zoom-icon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.zoom-in:hover .zoom-icon, .zoom-out:hover .zoom-icon {
+  transform: scale(1.1);
+}
+
 .chart-filters {
   display: flex;
   align-items: center;
@@ -892,6 +1314,7 @@ body:not(.home) .link:hover {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .chart-canvas-container canvas {
@@ -901,13 +1324,41 @@ body:not(.home) .link:hover {
 
 /* Chart Legend Styles */
 .chart-legend {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 15px;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  margin-top: 10px;
+  padding: 10px;
+  margin-top: 15px;
+  max-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+  /* Removed background and border-radius */
+}
+
+/* Dual Legend System - Chart Type Specific */
+.pie-legend,
+.bar-legend {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 15px;
+}
+
+.scatter-legend {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 15px;
+}
+
+/* Legend Item Types */
+.pie-legend-item,
+.bar-legend-item {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.scatter-legend-item {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .legend-item {
@@ -1050,6 +1501,24 @@ body:not(.home) .link:hover {
   cursor: pointer;
 }
 
+/* Stats Cards (V1-specific cards) */
+.stats-card {
+  background: white;
+  border: 2px solid #FE0000;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
 .stat-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -1098,6 +1567,31 @@ body:not(.home) .link:hover {
   font-size: 0.9em;
   color: #666;
   margin-top: 5px;
+}
+
+/* Stats Card Content Elements */
+.stats-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.stats-card-title {
+  font-size: 1.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+}
+
+.stats-card-value {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: var(--card-color, #FE0000);
+  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
 }
 
 /* Dynamic color classes for different statuses */
@@ -1217,7 +1711,7 @@ body:not(.home) .link:hover {
   width: 32px;
   height: 32px;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #FE0000;
+  border-top: 3px solid #666;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1342,8 +1836,8 @@ body:not(.home) .link:hover {
   content: '';
   width: 20px;
   height: 20px;
-  border: 2px solid #FE0000;
-  border-top: 2px solid transparent;
+  border: 2px solid #e0e0e0;
+  border-top: 2px solid #666;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-right: 15px;
@@ -1461,22 +1955,6 @@ body:not(.home) .link:hover {
   background: #cc0000;
 }
 
-.fallback-button {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
-  text-transform: uppercase;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.fallback-button:hover {
   background: #45a049;
 }
 
@@ -1499,20 +1977,157 @@ body:not(.home) .link:hover {
   background: #444;
 }
 
-/* Quota Exceeded Message */
-.quota-exceeded-message {
-  text-align: center;
-  padding: 40px 20px;
-  color: #333;
-  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+/* Demo Data Error - Modern Branded Design */
+.demo-data-error {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 400px;
   width: 100%;
-  grid-column: 1 / -1; /* Span all grid columns */
-  justify-self: center; /* Center within grid */
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  grid-column: 1 / -1;
+  justify-self: center;
+  align-self: center;
+}
+
+.demo-error-container {
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.demo-error-icon {
+  margin-bottom: 24px;
+  animation: demoErrorPulse 2s ease-in-out infinite;
+}
+
+.demo-error-title {
+  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #FE0000;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.demo-error-message {
+  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.demo-error-note {
+  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 32px;
+  line-height: 1.4;
+}
+
+.demo-error-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.demo-error-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 140px;
+  justify-content: center;
+}
+
+.demo-error-button.primary {
+  background: linear-gradient(135deg, #FE0000 0%, #E60000 50%, #CC0000 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(254, 0, 0, 0.3);
+}
+
+.demo-error-button.primary:hover {
+  background: linear-gradient(135deg, #E60000 0%, #CC0000 50%, #B30000 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(254, 0, 0, 0.4);
+}
+
+.demo-error-button.secondary {
+  background: transparent;
+  color: #FE0000;
+  border: 2px solid #FE0000;
+}
+
+.demo-error-button.secondary:hover {
+  background: #FE0000;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(254, 0, 0, 0.3);
+}
+
+.demo-error-button:active {
+  transform: translateY(-1px);
+  transition: all 0.1s ease;
+}
+
+@keyframes demoErrorPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+  50% { 
+    transform: scale(1.05); 
+    opacity: 0.8; 
+  }
+}
+
+/* Ensure demo error centers in any container */
+#dataList .demo-data-error,
+.legend-items .demo-data-error,
+#statusItems .demo-data-error,
+#statsCards .demo-data-error,
+.chart-container .demo-data-error {
+  grid-column: 1 / -1;
+  justify-self: center;
+  align-self: center;
+}
+
+/* Responsive design for demo error */
+@media (max-width: 768px) {
+  .demo-data-error {
+    min-height: 300px;
+    padding: 20px 15px;
+  }
+  
+  .demo-error-title {
+    font-size: 24px;
+  }
+  
+  .demo-error-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .demo-error-button {
+  width: 100%;
+    max-width: 200px;
+  }
 }
 
 /* Empty State Messages */
@@ -1580,22 +2195,6 @@ body:not(.home) .link:hover {
   line-height: 1.5;
 }
 
-.quota-exceeded-message .fallback-button {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
-  text-transform: uppercase;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.quota-exceeded-message .fallback-button:hover {
   background: #45a049;
 }
 
@@ -1636,22 +2235,8 @@ body:not(.home) .link:hover {
   justify-self: center;
 }
 
-/* Demo Mode Indicator */
-.demo-mode-indicator {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #4CAF50;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-family: 'TBL-2', Arial, Helvetica, sans-serif;
-  font-size: 0.9em;
-  font-weight: 500;
-  z-index: 1001;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  animation: demoModePulse 2s ease-in-out infinite;
-}
+/* Demo Mode Indicator - Larger Size with Enhanced Green Colors */
+/* Removed - using global demo banner instead */
 
 /* Demo Loading Indicator */
 .demo-loading-indicator {
@@ -1776,6 +2361,24 @@ body:not(.home) .link:hover {
   .charts-grid {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+  
+  .stats-cards-container {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 0 10px;
+  }
+  
+  .stats-card {
+    padding: 15px;
+  }
+  
+  .stats-card-value {
+    font-size: 2em;
+  }
+  
+  .stats-card-title {
+    font-size: 1em;
   }
   
   .chart-container {
@@ -1959,6 +2562,526 @@ body.the-blacklist .list-container {
 }
 
 /* ========================================
+   CHART EXPANSION STYLES
+   ======================================== */
+
+/* Chart Expansion Styles */
+.expand-toggle {
+  background: rgba(254, 0, 0, 0.1);
+  border: 1px solid #FE0000;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-toggle:hover {
+  background: rgba(254, 0, 0, 0.2);
+  border-color: #cc0000;
+  transform: translateY(-1px);
+}
+
+.expand-icon {
+  width: 16px;
+  height: 16px;
+  color: #FE0000;
+  transition: transform 0.3s ease;
+}
+
+.expand-toggle:hover .expand-icon {
+  transform: scale(1.1);
+}
+
+/* Expanded Chart Styles */
+.chart-container.expanded {
+  transition: all 0.3s ease;
+}
+
+.chart-container.expanded .chart-canvas-container {
+  height: calc(90vh - 120px);
+  width: calc(90vw - 40px);
+}
+
+.chart-container.expanded canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Expanded Chart Legend System */
+.chart-container.expanded .chart-legend {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 20px !important;
+  margin-top: 15px !important;
+  padding: 15px !important;
+  background: rgba(248, 249, 250, 0.8) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  max-width: none !important;
+}
+
+/* Hide chart controls when expanded, except expand toggle */
+.chart-container.expanded .chart-controls {
+  display: flex !important;
+}
+
+.chart-container.expanded .legend-toggle,
+.chart-container.expanded .zoom-in,
+.chart-container.expanded .zoom-out,
+.chart-container.expanded .zoom-reset {
+  display: none !important;
+}
+
+.chart-container.expanded .expand-toggle {
+  display: flex !important;
+}
+
+/* Expanded Legend Item Styles */
+.chart-container.expanded .pie-legend-item,
+.chart-container.expanded .bar-legend-item,
+.chart-container.expanded .scatter-legend-item {
+  background: white !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.chart-container.expanded .legend-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 8px 12px !important;
+  background: white !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.chart-container.expanded .legend-item:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.chart-container.expanded .similarity-section {
+  flex-basis: 100% !important;
+  margin-top: 15px !important;
+  order: 999 !important;
+}
+
+/* Chart Controls Enhancement */
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chart-controls button {
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Enhanced Tooltip Styles */
+.chartjs-tooltip {
+  font-family: 'TBL-2', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.chartjs-tooltip-title {
+  font-weight: bold !important;
+  font-size: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+.chartjs-tooltip-body {
+  font-size: 14px !important;
+}
+
+/* Legend Tooltip Styles */
+.legend-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'TBL-2', monospace;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  transform: translateY(-100%);
+  margin-top: -8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.legend-tooltip div {
+  margin-bottom: 2px;
+}
+
+.legend-tooltip div:last-child {
+  margin-bottom: 0;
+}
+
+.legend-tooltip strong {
+  color: #FE0000;
+}
+
+/* Legend item hover effects */
+.legend-item {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.legend-item:hover {
+  transform: translateY(-1px);
+}
+
+/* Similarity Analysis Section */
+.similarity-section {
+  grid-column: 1 / -1;
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(254, 0, 0, 0.05);
+  border: 1px solid rgba(254, 0, 0, 0.2);
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.similarity-section:hover {
+  background: rgba(254, 0, 0, 0.08);
+  border-color: rgba(254, 0, 0, 0.3);
+}
+
+.similarity-section .similarity-title {
+  font-family: 'TBL-2', monospace;
+  font-weight: bold;
+  color: #FE0000;
+  font-size: 14px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.similarity-section .similarity-content {
+  font-family: 'TBL-2', monospace;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.similarity-section .similarity-content div {
+  margin-bottom: 4px;
+}
+
+.similarity-section .similarity-content strong {
+  color: #FE0000;
+  font-weight: 600;
+}
+
+.similarity-section .matching-individuals {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  max-height: 60px;
+  overflow-y: auto;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+/* Responsive Chart Controls */
+@media only screen and (max-width: 768px) {
+  .chart-controls {
+    gap: 6px;
+  }
+  
+  .chart-controls button {
+    min-width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+  
+  .chart-controls button svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .chart-container.expanded .chart-canvas-container {
+    height: calc(90vh - 100px);
+    width: calc(90vw - 20px);
+  }
+  
+  .similarity-section {
+    padding: 10px;
+    margin-top: 12px;
+  }
+  
+  .similarity-section .similarity-title {
+    font-size: 12px;
+  }
+  
+  .similarity-section .similarity-content {
+    font-size: 12px;
+  }
+}
+
+/* ========================================
    ADMIN STYLES
    ======================================== */
+
+/* ========================================
+   DEMO BANNER STYLES
+   ======================================== */
+.demo-banner {
+  background: linear-gradient(135deg, #FE0000, #cc0000);
+  color: white;
+  padding: 8px 20px;
+  font-family: 'TBL-2', monospace;
+  font-size: 13px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-bottom: 2px solid #cc0000;
+  position: relative;
+  z-index: 100;
+}
+
+.demo-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.demo-banner-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.demo-banner-message {
+  flex: 1;
+  text-align: center;
+}
+
+.demo-banner-text {
+  display: inline-block;
+}
+
+.demo-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.demo-banner-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  font-family: 'TBL-2', monospace;
+}
+
+.demo-banner-btn-primary {
+  background: white;
+  color: #FE0000;
+}
+
+.demo-banner-btn-primary:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.demo-banner-btn-secondary {
+  background: #4CAF50;
+  color: white;
+}
+
+.demo-banner-btn-secondary:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments for demo banner */
+@media only screen and (max-width: 768px) {
+  .demo-banner {
+    padding: 6px 15px;
+    font-size: 12px;
+  }
+  
+  .demo-banner-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .demo-banner-actions {
+    justify-content: center;
+  }
+  
+  .demo-banner-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .demo-banner {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  
+  .demo-banner-content {
+    gap: 6px;
+  }
+  
+  .demo-banner-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+}
+
+/* Logo SVG and Fallback Styles */
+#main-title svg {
+  display: block;
+  max-width: 200px;
+  height: auto;
+}
+
+.logo-fallback {
+  display: none;
+  font-family: 'TBL', 'TBL-Fallback', Arial Black, Arial, Helvetica, sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  color: #FE0000;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Fallback for browsers that don't support SVG */
+.no-svg #main-title svg {
+  display: none;
+}
+
+.no-svg .logo-fallback {
+  display: block;
+}
+
+/* Ensure SVG scales properly on different screen sizes */
+@media (max-width: 768px) {
+  #main-title svg {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  #main-title svg {
+    max-width: 120px;
+  }
+}
+
+/* New Item Fields Styles */
+.item-appearance {
+  font-size: 11px;
+  color: #ccc;
+  margin-top: 2px;
+  font-family: 'TBL-2', 'TBL-2-Fallback', monospace;
+}
+
+.item-bio {
+  font-size: 10px;
+  color: #999;
+  margin-top: 2px;
+  line-height: 1.2;
+  font-style: italic;
+}
+
+.item-image {
+  margin-top: 2px;
+}
+
+.item-image img {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid #333;
+}
+
+.item-link {
+  margin-top: 2px;
+}
+
+.item-link a {
+  color: #FE0000;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.item-link a:hover {
+  color: #ff4444;
+  text-decoration: underline;
+}
+
+/* SVG Logo Styles for Index Page */
+#main-title svg {
+  display: block;
+  max-width: 200px;
+  height: auto;
+}
+
+.logo-fallback {
+  display: none;
+  font-family: 'TBL', 'Arial Black', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  color: #FE0000;
+}
+
+.no-svg #main-title svg {
+  display: none;
+}
+
+.no-svg .logo-fallback {
+  display: inline;
+}
+
+/* Header Title Styles */
+.title {
+  font-family: 'TBL', 'Arial Black', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+}
+
+.overlay h1 {
+  font-family: 'TBL', 'Arial Black', Arial, Helvetica, sans-serif;
+  font-weight: bold;
+}
+
+/* Responsive SVG Logo */
+@media (max-width: 768px) {
+  #main-title svg {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  #main-title svg {
+    max-width: 120px;
+  }
+}
 

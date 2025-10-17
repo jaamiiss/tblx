@@ -46,23 +46,42 @@ class ChartUtils {
         },
         tooltip: {
           enabled: true,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
           titleColor: '#fff',
           bodyColor: '#fff',
-          borderColor: '#fff',
-          borderWidth: 1,
-          cornerRadius: 6,
+          borderColor: '#FE0000',
+          borderWidth: 2,
+          cornerRadius: 8,
           displayColors: true,
-          padding: 12,
+          padding: 16,
           titleSpacing: 8,
-          bodySpacing: 6,
+          bodySpacing: 8,
+          titleFont: {
+            size: 16,
+            weight: 'bold',
+            family: 'TBL-2, monospace'
+          },
+          bodyFont: {
+            size: 14,
+            family: 'TBL-2, monospace'
+          },
           callbacks: {
+            title: function(context) {
+              return context[0].label;
+            },
             label: function(context) {
-              const label = context.label || '';
               const value = context.parsed;
               const total = context.dataset.data.reduce((a, b) => a + b, 0);
               const percentage = ((value / total) * 100).toFixed(1);
-              return `${label}: ${value} (${percentage}%)`;
+              return ` ${value} (${percentage}%)`;
+            },
+            labelColor: function(context) {
+              return {
+                borderColor: context.dataset.backgroundColor[context.dataIndex],
+                backgroundColor: context.dataset.backgroundColor[context.dataIndex],
+                borderWidth: 2,
+                borderRadius: 4
+              };
             }
           }
         }
@@ -149,16 +168,7 @@ class ChartUtils {
       },
       plugins: {
         legend: {
-          display: true,
-          position: 'bottom',
-          labels: {
-            usePointStyle: true,
-            padding: 20,
-            font: {
-              family: 'TBL-2, Arial, Helvetica, sans-serif',
-              size: 12
-            }
-          }
+          display: false // Disable built-in legend, we'll create custom one
         }
       }
     };

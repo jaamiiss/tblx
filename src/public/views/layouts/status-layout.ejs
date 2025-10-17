@@ -1,9 +1,37 @@
-<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/head', { 
+  title: title,
+  includeDemoManager: true
+}) %>
 <body>
   <header class="main-header">
-    <h1><a class="link" href="/" id="main-title">The Blacklist</a></h1>
+    <h1>
+      <a class="link" href="/" id="main-title">
+        <svg width="200" height="40" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" aria-label="The Blacklist Logo">
+          <!-- Background rectangle -->
+          <rect width="200" height="40" fill="#1a1a1a" stroke="#FE0000" stroke-width="2"/>
+          
+          <!-- Main text "THE BLACKLIST" -->
+          <text x="100" y="26" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FE0000" text-transform="uppercase" letter-spacing="2px">
+            THE BLACKLIST
+          </text>
+          
+          <!-- Decorative line -->
+          <line x1="20" y1="32" x2="180" y2="32" stroke="#FE0000" stroke-width="1"/>
+          
+          <!-- Fallback text (hidden by default) -->
+          <text x="100" y="26" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FE0000" style="display: none;">
+            THE BLACKLIST
+          </text>
+        </svg>
+        <!-- Fallback text for browsers that don't support SVG -->
+        <span class="logo-fallback">THE BLACKLIST</span>
+      </a>
+    </h1>
     <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
   </header>
+  
+  <!-- Demo Banner -->
+  <%- include('../partials/demo-banner') %>
   
   <!-- Reusable List Components -->
   <%- include('../partials/list-components', {
@@ -14,7 +42,7 @@
   
   <div class="list-container">
     <div class="status-header">
-      <div class="status-title"><%= (status || 'unknown').charAt(0).toUpperCase() + (status || 'unknown').slice(1) %> Status</div>
+      <div class="status-title"><%= (status || 'unknown').charAt(0).toUpperCase() + (status || 'unknown').slice(1) %></div>
       <div class="status-subtitle">Filtered list of individuals with <%= status || 'unknown' %> status</div>
     </div>
     
@@ -32,7 +60,7 @@
            hx-get="/status/<%= status || 'unknown' %>" 
            hx-trigger="load" 
            hx-indicator="#loading-spinner">
-        <div id="loading-spinner" class="htmx-indicator">Loading items...</div>
+             <div id="loading-spinner" class="htmx-indicator" style="display: none;">Loading...</div>
       </div>
     </div>
   </div>
@@ -40,8 +68,13 @@
   <script>
     // Status page demo data handlers
     document.addEventListener('DOMContentLoaded', function() {
-        // Listen for demo mode changes
-        window.addEventListener('demoModeChanged', function(event) {
+      // Initialize demo manager
+      if (typeof initDemoManager === 'function') {
+        initDemoManager();
+      }
+      
+      // Listen for demo mode changes
+      window.addEventListener('demoModeChanged', function(event) {
           if (event.detail.demoMode && window.demoManager) {
             loadStatusDemoData();
           }
@@ -63,10 +96,46 @@
     function loadStatusDemoData() {
       const currentStatus = '<%= status || "unknown" %>';
       const pageId = `status-${currentStatus}`;
-      const endpoint = `/status/${currentStatus}`;
+      
+      // Use dummy data directly instead of making network requests
+      console.log(`Demo Manager: Loading dummy data for status ${currentStatus}`);
       
       if (window.demoManager) {
-        window.demoManager.loadDemoDataForPage(pageId, endpoint, 'statusItems', window.renderStatusData);
+        // Get dummy data from the server's dummy data endpoint
+        fetch('/dummy-data/v1')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+          })
+          .then(allItems => {
+            // Filter dummy data by status
+            const filteredItems = allItems.filter(item => 
+              item.status && item.status.toLowerCase() === currentStatus.toLowerCase()
+            );
+            
+            console.log(`Demo Manager: Loaded dummy data for ${currentStatus}:`, filteredItems.length, 'items');
+            
+            // Render the dummy data
+            if (window.renderStatusData) {
+              window.renderStatusData(filteredItems, 'statusItems');
+            }
+            
+            // Enable demo mode and show banner when demo data is successfully loaded
+            if (window.demoManager && !window.demoManager.isDemoMode()) {
+              console.log('Status page: Enabling demo mode after successful demo data load');
+              window.demoManager.enableDemoMode();
+            }
+          })
+          .catch(error => {
+            console.error('Demo Manager: Failed to load dummy data:', error);
+            // Fallback to empty state
+            const statusItems = document.getElementById('statusItems');
+            if (statusItems) {
+              statusItems.innerHTML = '<div class="no-data">Demo data not available</div>';
+            }
+          });
       }
     }
 
@@ -202,18 +271,24 @@
 
     // Update spinner text using StringSchema when available
     document.addEventListener('DOMContentLoaded', function() {
-      if (window.StringSchema) {
-        // Update main title
-        const mainTitle = document.getElementById('main-title');
-        if (mainTitle) {
-          mainTitle.textContent = window.StringSchema.getPageTitle('status');
-        }
+      // Use requestAnimationFrame for smoother updates
+      requestAnimationFrame(function() {
+        if (window.StringSchema) {
+          // Update main title
+          const mainTitle = document.getElementById('main-title');
+          if (mainTitle) {
+            const newTitle = window.StringSchema.getPageTitle('status');
+            if (newTitle !== mainTitle.textContent) {
+              mainTitle.textContent = newTitle;
+            }
+          }
 
-        const spinner = document.getElementById('loading-spinner');
-        if (spinner) {
-          spinner.textContent = window.StringSchema.getLoadingMessage('items');
+          const spinner = document.getElementById('loading-spinner');
+          if (spinner) {
+            spinner.textContent = window.StringSchema.getLoadingMessage('items');
+          }
         }
-      }
+      });
     });
 
     // Listen for successful HTMX requests to detect live data loading
