@@ -1,0 +1,24 @@
+<!-- Version Toggle -->
+<% if (typeof hideToggleButtons === 'undefined' || !hideToggleButtons) { %>
+<div class="version-toggle">
+  <a href="/list" class="toggle-btn <%= activeTab === 'v1' ? 'active' : '' %>">V1</a>
+  <a href="/list/v2" class="toggle-btn <%= activeTab === 'v2' ? 'active' : '' %>">V2</a>
+  <a href="/stats" class="toggle-btn <%= activeTab === 'stats' ? 'active' : '' %>">Stats</a>
+  <a href="/the-blacklist" class="toggle-btn <%= activeTab === 'the-blacklist' ? 'active' : '' %>">Old</a>
+</div>
+<% } %>
+
+<!-- Toggle Description -->
+<% if (typeof descriptions !== 'undefined' && descriptions[activeTab]) { %>
+  <div class="toggle-description-container">
+    <div class="toggle-description">
+      <strong><%= activeTab.toUpperCase() %>:</strong> <%= descriptions[activeTab] %>
+    </div>
+  </div>
+<% } else if (typeof status !== 'undefined' && status) { %>
+  <div class="toggle-description-container">
+    <div class="toggle-description">
+      <strong>Status</strong>
+    </div>
+  </div>
+<% } %>

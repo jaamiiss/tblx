@@ -1,11 +1,13 @@
 {
   "name": "test-htmx",
-  "version": "2.0.4",
+  "version": "2.7.0",
   "description": "The Blacklist",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "start:prod": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +21,8 @@
     "memory-cache": "^0.2.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "clean-css": "^5.3.3",
+    "nodemon": "^3.1.4",
+    "terser": "^5.44.0"
   }
 }

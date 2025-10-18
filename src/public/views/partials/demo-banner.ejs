@@ -1,0 +1,43 @@
+<!-- Demo Data Banner -->
+<div id="demo-data-banner" class="demo-banner" style="display: none;">
+  <div class="demo-banner-content">
+    <div class="demo-banner-icon">⚠️</div>
+    <div class="demo-banner-message">
+      <span class="demo-banner-text">DEMO DATA MODE: <span id="demo-banner-context">Data using demo data</span> (requests blocked).</span>
+    </div>
+    <div class="demo-banner-actions">
+      <button onclick="window.demoManager.clearDemoMode()" class="demo-banner-btn demo-banner-btn-primary">
+        Clear Demo Mode
+      </button>
+      <button onclick="window.demoManager.verifyDataSources()" class="demo-banner-btn demo-banner-btn-secondary">
+        Verify Data
+      </button>
+      <button onclick="window.toggleDebug()" class="demo-banner-btn demo-banner-btn-secondary" id="debug-toggle-btn">
+        Enable Debug
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Update debug button text based on current state
+document.addEventListener('DOMContentLoaded', function() {
+  const debugBtn = document.getElementById('debug-toggle-btn');
+  if (debugBtn && window.logManager) {
+    const updateDebugButton = () => {
+      debugBtn.textContent = window.logManager.isDebugMode() ? 'Disable Debug' : 'Enable Debug';
+    };
+    
+    // Update on page load
+    updateDebugButton();
+    
+    // Listen for debug mode changes
+    const originalToggleDebug = window.toggleDebug;
+    window.toggleDebug = function() {
+      const result = originalToggleDebug();
+      updateDebugButton();
+      return result;
+    };
+  }
+});
+</script>

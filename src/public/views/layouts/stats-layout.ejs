@@ -1,0 +1,724 @@
+<%- include('../partials/head', { 
+  title: title, 
+  includeChartJS: true,
+  includePerformanceMonitor: true,
+  includeDemoManager: true,
+  includeItemRenderer: true,
+  preloadFonts: false
+}) %>
+<body class="stats-page">
+  <header class="main-header">
+    <h1>
+      <a class="link" href="/" id="main-title">
+        <svg width="200" height="40" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" aria-label="The Blacklist Logo">
+          <!-- Background rectangle -->
+          <rect width="200" height="40" fill="#1a1a1a" stroke="#FE0000" stroke-width="2"/>
+          
+          <!-- Main text "THE BLACKLIST" -->
+          <text x="100" y="26" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FE0000" text-transform="uppercase" letter-spacing="2px">
+            THE BLACKLIST
+          </text>
+          
+          <!-- Decorative line -->
+          <line x1="20" y1="32" x2="180" y2="32" stroke="#FE0000" stroke-width="1"/>
+          
+          <!-- Fallback text (hidden by default) -->
+          <text x="100" y="26" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FE0000" style="display: none;">
+            THE BLACKLIST
+          </text>
+        </svg>
+        <!-- Fallback text for browsers that don't support SVG -->
+        <span class="logo-fallback">THE BLACKLIST</span>
+      </a>
+    </h1>
+    <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
+  </header>
+  
+  <!-- Demo Banner -->
+  <%- include('../partials/demo-banner') %>
+  
+  <!-- Version Toggle -->
+  <div class="version-toggle">
+    <a href="/list" class="toggle-btn">V1</a>
+    <a href="/list/v2" class="toggle-btn">V2</a>
+    <a href="/stats" class="toggle-btn active">Stats</a>
+    <a href="/the-blacklist" class="toggle-btn">Old</a>
+  </div>
+  
+  <!-- Toggle Description -->
+  <div class="toggle-description-container">
+    <div class="toggle-description">
+      <strong>Stats:</strong> V1 Data Analytics & Charts
+    </div>
+  </div>
+
+  <main class="main-content">
+    <div class="container">
+      <!-- Stats Cards with HTMX -->
+      <div id="statsCards" 
+           class="stats-cards">
+        <!-- Initial demo data content (will be replaced with live data if available) -->
+        <div class="stats-cards-container">
+          <div class="status-cards-grid">
+            <div class="stat-card deceased" onclick="window.location.href='/list/deceased'">
+              <div class="stat-number">40</div>
+              <div class="stat-label">Deceased</div>
+              <div class="stat-percentage">19.8%</div>
+            </div>
+            <div class="stat-card active" onclick="window.location.href='/list/active'">
+              <div class="stat-number">40</div>
+              <div class="stat-label">Active</div>
+              <div class="stat-percentage">19.8%</div>
+            </div>
+            <div class="stat-card incarcerated" onclick="window.location.href='/list/incarcerated'">
+              <div class="stat-number">40</div>
+              <div class="stat-label">Incarcerated</div>
+              <div class="stat-percentage">19.8%</div>
+            </div>
+            <div class="stat-card redacted" onclick="window.location.href='/list/redacted'">
+              <div class="stat-number">40</div>
+              <div class="stat-label">Redacted</div>
+              <div class="stat-percentage">19.8%</div>
+            </div>
+            <div class="stat-card unknown" onclick="window.location.href='/list/unknown'">
+              <div class="stat-number">20</div>
+              <div class="stat-label">Unknown</div>
+              <div class="stat-percentage">9.9%</div>
+            </div>
+            <div class="stat-card captured" onclick="window.location.href='/list/captured'">
+              <div class="stat-number">22</div>
+              <div class="stat-label">Captured</div>
+              <div class="stat-percentage">10.9%</div>
+            </div>
+          </div>
+          
+          <!-- Total card separated and centered -->
+          <div class="total-card-container">
+            <div class="stat-card total">
+              <div class="stat-number">202</div>
+              <div class="stat-label">Total</div>
+              <div class="stat-percentage">100%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+      <!-- Charts Section -->
+      <div class="charts-section">
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+        <!-- Category Distribution Chart -->
+        <div class="chart-container">
+          <div class="chart-header">
+          <h3>Category Distribution</h3>
+          <div class="chart-controls">
+            <button class="legend-toggle" onclick="statsPageCharts.toggleLegend('pieChartLegend')" title="Toggle Legend">
+              <svg class="legend-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button class="expand-toggle" onclick="statsPageCharts.toggleExpand('pieChartContainer')" title="Expand Chart">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+            </button>
+          </div>
+          </div>
+          <div class="chart-wrapper">
+            <div id="pieChartContainer" class="chart-canvas-container">
+                <div id="pieChartSpinner" class="chart-loading-spinner">Loading chart...</div>
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div id="pieChartLegend" class="chart-legend"></div>
+          </div>
+        </div>
+
+        <!-- Status Distribution Chart -->
+        <div class="chart-container">
+          <div class="chart-header">
+          <h3>Status Distribution</h3>
+          <div class="chart-controls">
+            <button class="legend-toggle" onclick="statsPageCharts.toggleLegend('barChartLegend')" title="Toggle Legend">
+              <svg class="legend-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button class="expand-toggle" onclick="statsPageCharts.toggleExpand('barChartContainer')" title="Expand Chart">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+            </button>
+          </div>
+          </div>
+          <div class="chart-wrapper">
+            <div id="barChartContainer" class="chart-canvas-container">
+                <div id="barChartSpinner" class="chart-loading-spinner">Loading chart...</div>
+                <canvas id="barChart"></canvas>
+            </div>
+              <div id="barChartLegend" class="chart-legend"></div>
+          </div>
+        </div>
+
+        <!-- V1 vs V2 Scatter Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+          <h3>V1 vs V2 Analysis</h3>
+          <div class="chart-controls">
+            <button class="legend-toggle" onclick="statsPageCharts.toggleLegend('scatterChartLegend')" title="Toggle Legend">
+              <svg class="legend-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button class="expand-toggle" onclick="statsPageCharts.toggleExpand('scatterChartContainer')" title="Expand Chart">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              </svg>
+            </button>
+            <button class="zoom-in" onclick="statsPageCharts.zoomInScatter()" title="Zoom In">
+              <svg class="zoom-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+            </button>
+            <button class="zoom-out" onclick="statsPageCharts.zoomOutScatter()" title="Zoom Out">
+              <svg class="zoom-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+            </button>
+            <button class="zoom-reset" onclick="statsPageCharts.resetScatterZoom()" title="Reset Zoom">
+              <svg class="reset-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                <path d="M21 3v5h-5"></path>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                <path d="M3 21v-5h5"></path>
+              </svg>
+            </button>
+          </div>
+            </div>
+            <div class="chart-filters">
+              <select id="dataFilter" class="filter-select">
+                <option value="both">Both</option>
+                <option value="v1">V1</option>
+                <option value="v2">V2</option>
+              </select>
+              <select id="statusFilter" class="filter-select">
+                <option value="all">All</option>
+                <option value="deceased">Deceased</option>
+                <option value="active">Active</option>
+                <option value="incarcerated">Incarcerated</option>
+                <option value="redacted">Redacted</option>
+                <option value="unknown">Unknown</option>
+                <option value="captured">Captured</option>
+              </select>
+            </div>
+            <!-- Legend below chart -->
+          <div class="chart-wrapper">
+            <div id="scatterChartContainer" class="chart-canvas-container">
+                  <div id="scatterChartSpinner" class="chart-loading-spinner">Loading chart...</div>
+                  <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+              <div id="scatterChartLegend" class="chart-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quota Exceeded Message -->
+      <div id="quota-exceeded-message" class="quota-exceeded-message" style="display: none;">
+        <div class="quota-message-content">
+          <h3>Database Quota Exceeded</h3>
+          <p>We've reached our database read limit. Please try again later or contact support.</p>
+        </div>
+        </div>
+      </div>
+
+      <!-- Loading Spinner for Stats Cards -->
+      <div id="stats-loading-spinner" class="htmx-indicator stats-loading-spinner">
+        <div class="loading-content">
+          <div class="spinner"></div>
+          <span>Updating statistics...</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Chart.js Zoom Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <script>
+    // Fallback for Chart.js zoom plugin
+    if (typeof ChartZoom === 'undefined') {
+      console.warn('Chart.js zoom plugin failed to load from CDN, loading fallback...');
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js';
+      document.head.appendChild(script);
+    }
+  </script>
+
+  <!-- Shared Chart Utilities -->
+  <script src="/shared/assets/js/chart-utils.js"></script>
+  
+  <!-- Shared Chart Classes -->
+  <script src="/shared/assets/js/charts/base-chart.js"></script>
+  <script src="/shared/assets/js/charts/pie-chart.js"></script>
+  <script src="/shared/assets/js/charts/bar-chart.js"></script>
+  <script src="/shared/assets/js/charts/scatter-chart.js"></script>
+  
+  <!-- Stats Page Charts Manager -->
+  <script src="/assets/js/charts/stats-page-charts-manager.js"></script>
+
+  <script>
+    // Update spinner text using StringSchema when available
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.StringSchema) {
+        const spinner = document.getElementById('stats-loading-spinner');
+        if (spinner) {
+          spinner.textContent = window.StringSchema.getLoadingMessage('statistics');
+        }
+      }
+    });
+
+    // HTMX Event Handlers for Stats Cards
+    document.addEventListener('htmx:beforeRequest', function(event) {
+      // Show loading state for stats cards
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.log('Stats cards: Starting update...');
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.add('htmx-loading');
+        }
+      }
+    });
+
+    document.addEventListener('htmx:afterRequest', function(event) {
+      // Handle successful stats cards update
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.remove('htmx-loading');
+          
+          if (event.detail.successful) {
+            console.log('Stats cards: Live data loaded successfully');
+            // Add success animation
+            statsCards.classList.add('htmx-success');
+            setTimeout(() => {
+              statsCards.classList.remove('htmx-success');
+            }, 2000);
+            
+            // Hide any demo spinners when live data loads
+            if (window.spinnerManager) {
+              window.spinnerManager.hideDemoSpinner('statsCards');
+            }
+            
+            // Notify demo manager
+            if (window.demoManager) {
+              window.demoManager.onLiveDataLoaded('stats-cards', 'statsCards');
+            }
+            
+            // Hide demo banner if it exists
+            const demoBanner = document.getElementById('demo-data-banner');
+            if (demoBanner) {
+              demoBanner.style.display = 'none';
+              console.log('Stats cards: Hidden demo banner after successful live data load');
+            }
+          } else {
+            console.log('Stats cards: Live data failed, keeping demo data');
+            statsCards.classList.add('htmx-error');
+            
+            // Show demo mode indicator since we're using demo data
+            if (window.demoManager && !window.demoManager.isDemoMode()) {
+              console.log('Stats cards: Enabling demo mode due to failed live data');
+              window.demoManager.enableDemoMode();
+            }
+          }
+        }
+      }
+    });
+
+    document.addEventListener('htmx:responseError', function(event) {
+      // Handle HTMX response errors
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.log('Stats cards: Network error, keeping demo data');
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.remove('htmx-loading');
+          statsCards.classList.add('htmx-error');
+          
+          // Show demo mode indicator since we're using demo data
+          if (window.demoManager && !window.demoManager.isDemoMode()) {
+            console.log('Stats cards: Enabling demo mode due to network error');
+            window.demoManager.enableDemoMode();
+          }
+          console.log('Stats cards: Attempting to load dummy data as fallback...');
+          loadStatsCardsDummyData();
+        }
+      }
+    });
+
+    document.addEventListener('htmx:sendError', function(event) {
+      // Handle HTMX send errors (network issues)
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.error('Stats cards: HTMX send error:', event.detail);
+        const statsCards = document.getElementById('statsCards');
+        
+        if (statsCards) {
+          statsCards.classList.remove('htmx-loading');
+          statsCards.classList.add('htmx-error');
+          
+          // Try to load dummy data as fallback
+          console.log('Stats cards: Network error, attempting to load dummy data as fallback...');
+          loadStatsCardsDummyData();
+        }
+      }
+    });
+
+    // Add HTMX event listeners for debugging
+    document.addEventListener('htmx:beforeRequest', function(event) {
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.log('Stats: HTMX beforeRequest for stats cards');
+      }
+    });
+    
+    document.addEventListener('htmx:afterRequest', function(event) {
+      if (event.detail.pathInfo.requestPath.includes('/stats/cards')) {
+        console.log('Stats: HTMX afterRequest for stats cards');
+        console.log('Stats: HTMX response status:', event.detail.xhr.status);
+        console.log('Stats: HTMX response text:', event.detail.xhr.responseText.substring(0, 200));
+        
+        // Check what's actually displayed after HTMX update
+        setTimeout(() => {
+          const statsCards = document.getElementById('statsCards');
+          if (statsCards) {
+            const v1ItemsValue = statsCards.querySelector('.stats-card-value');
+            console.log('Stats: After HTMX update, V1 Items value:', v1ItemsValue ? v1ItemsValue.textContent : 'Not found');
+          }
+        }, 100);
+      }
+    });
+
+    // Initialize demo manager
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof initDemoManager === 'function') {
+        console.log('Stats: Initializing demo manager...');
+        initDemoManager();
+        
+        // Ensure demo controls are shown after initialization
+        setTimeout(() => {
+          console.log('Stats: Checking demo mode status...');
+          console.log('Stats: Demo manager available:', !!window.demoManager);
+          console.log('Stats: LocalStorage demo mode:', localStorage.getItem('demoMode'));
+          
+          if (window.demoManager && window.demoManager.isDemoMode()) {
+            console.log('Stats: Demo mode active, ensuring banner is visible');
+            // Demo mode indicator is now handled by the global demo banner system
+            console.log('Stats: Demo mode banner should be visible');
+          } else {
+            console.log('Stats: Demo mode not active, checking quota status...');
+            // Check quota status to see if demo button should be shown
+            if (window.demoManager) {
+              window.demoManager.checkQuotaStatus();
+            }
+            
+            // Remove the network connectivity test - let HTMX handle errors naturally
+            // setTimeout(() => {
+            //   if (window.demoManager && !window.demoManager.isDemoMode()) {
+            //     // Check if HTMX requests are being blocked by testing a simple request
+            //     testNetworkConnectivity().then(isBlocked => {
+            //       console.log('Stats: Network connectivity test result:', isBlocked);
+            //       if (isBlocked) {
+            //         console.log('Stats: Network requests are blocked, loading dummy data for stats cards');
+            //         loadStatsCardsDummyData();
+            //       } else {
+            //         console.log('Stats: Network is available, keeping live data');
+            //       }
+            //     });
+            //   }
+            // }, 2000);
+            
+            // Function to test network connectivity
+            async function testNetworkConnectivity() {
+              try {
+                console.log('Stats: Testing network connectivity...');
+                const response = await fetch('/quota-status', { 
+                  method: 'HEAD',
+                  cache: 'no-cache',
+                  timeout: 3000
+                });
+                console.log('Stats: Network test response:', response.ok, response.status);
+                return !response.ok;
+              } catch (error) {
+                console.log('Stats: Network test failed:', error.message);
+                return true; // Network is blocked
+              }
+            }
+          }
+          
+          // Additional check to ensure demo banner is visible if demo mode is active
+          setTimeout(() => {
+            if (window.demoManager && window.demoManager.isDemoMode()) {
+              console.log('Stats: Double-checking demo mode banner...');
+              const demoBanner = document.getElementById('demo-data-banner');
+              console.log('Stats: Demo banner exists:', !!demoBanner);
+              
+              if (!demoBanner) {
+                console.log('Stats: Demo banner missing, recreating...');
+                window.demoManager.showDemoDataBanner();
+              }
+            }
+          }, 1000);
+        }, 500);
+      } else {
+        console.log('Stats: initDemoManager function not available');
+      }
+      
+        // Initialize HTMX for stats cards
+        const statsCards = document.getElementById('statsCards');
+        if (statsCards) {
+          // Use conditional logging
+          if (window.logManager && window.logManager.isDebugMode()) {
+            console.log('Stats: Initializing HTMX for stats cards');
+          }
+        
+        // Always enable HTMX for stats cards (let demo manager handle fallback)
+        statsCards.setAttribute('hx-get', '/stats/cards');
+        statsCards.setAttribute('hx-trigger', 'load, every 30s');
+        statsCards.setAttribute('hx-indicator', '#stats-loading-spinner');
+        statsCards.setAttribute('hx-target', 'this');
+        statsCards.setAttribute('hx-swap', 'innerHTML');
+        
+        // Process the element with HTMX
+        if (window.htmx) {
+          console.log('Stats: Processing stats cards element with HTMX');
+          htmx.process(statsCards);
+        }
+        
+        console.log('Stats: HTMX attributes set:', {
+          'hx-get': statsCards.getAttribute('hx-get'),
+          'hx-trigger': statsCards.getAttribute('hx-trigger'),
+          'hx-target': statsCards.getAttribute('hx-target'),
+          'hx-swap': statsCards.getAttribute('hx-swap')
+        });
+        
+        // Trigger initial load
+        setTimeout(() => {
+          console.log('Stats: Triggering initial HTMX request for stats cards');
+          if (window.htmx) {
+            htmx.trigger(statsCards, 'load');
+          }
+        }, 500);
+      }
+      
+      // Function to load dummy data for stats cards
+      async function loadStatsCardsDummyData() {
+        try {
+          console.log('Stats: Loading dummy data for stats cards...');
+          const response = await fetch('/dummy-data/stats');
+          if (response.ok) {
+            const dummyData = await response.json();
+            // Update stats cards with dummy data
+            updateStatsCardsWithData(dummyData);
+            console.log('Stats: Stats cards updated with dummy data');
+          } else {
+            console.error('Stats: Failed to load dummy data for stats cards');
+          }
+        } catch (error) {
+          console.error('Stats: Error loading dummy data for stats cards:', error);
+        }
+      }
+      
+      // Function to update stats cards with data
+      function updateStatsCardsWithData(data) {
+        const statsCards = document.getElementById('statsCards');
+        if (!statsCards) return;
+        
+        // Handle V1-specific data structure
+        if (data.v1Total !== undefined && data.v1Counts) {
+          // New V1-specific structure
+          const v1Total = data.v1Total;
+          const v1Counts = data.v1Counts;
+          
+          // Calculate percentages based on V1 total
+          const v1Percentages = {};
+          Object.keys(v1Counts).forEach(status => {
+            v1Percentages[status] = v1Total > 0 ? ((v1Counts[status] / v1Total) * 100).toFixed(1) : '0.0';
+          });
+          
+          // Generate V1 status cards grid HTML
+          const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+          
+          let statusCardsHtml = '';
+          statuses.forEach(status => {
+            statusCardsHtml += `
+              <div class="stat-card ${status}" onclick="window.location.href='/list/${status}'">
+                <div class="stat-number">${v1Counts[status] || 0}</div>
+                <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+                <div class="stat-percentage">${v1Percentages[status] || '0.0'}%</div>
+              </div>
+            `;
+          });
+          
+          statsCards.innerHTML = `
+            <div class="stats-cards-container">
+              <div class="status-cards-grid">
+                ${statusCardsHtml}
+              </div>
+              
+              <!-- Total card separated and centered -->
+              <div class="total-card-container">
+                <div class="stat-card total">
+                  <div class="stat-number">${v1Total}</div>
+                  <div class="stat-label">Total</div>
+                  <div class="stat-percentage">100%</div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (data.counts) {
+          // Fallback to old structure
+          console.error('Stats: Using fallback data structure - should use V1-specific data');
+          return;
+        } else {
+          console.error('Stats: Invalid data structure for stats cards');
+          return;
+        }
+      }
+      
+      // Listen for demo mode changes
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'demoMode') {
+          console.log('Stats: Demo mode changed, updating page...');
+          setTimeout(() => {
+            if (window.demoManager) {
+              const isDemoMode = e.newValue === 'true';
+              console.log('Stats: Demo mode is now:', isDemoMode);
+              
+              if (isDemoMode) {
+                // Enable demo mode
+                // Demo mode indicator is now handled by the global demo banner system
+                // Disable HTMX for stats cards
+                const statsCards = document.getElementById('statsCards');
+                if (statsCards) {
+                  statsCards.removeAttribute('hx-get');
+                  statsCards.removeAttribute('hx-trigger');
+                  statsCards.removeAttribute('hx-target');
+                  statsCards.removeAttribute('hx-swap');
+                  console.log('Stats: HTMX disabled for demo mode');
+                }
+              } else {
+                // Disable demo mode
+                window.demoManager.clearDemoMode();
+                // Enable HTMX for stats cards
+                const statsCards = document.getElementById('statsCards');
+                if (statsCards) {
+                  statsCards.setAttribute('hx-get', '/stats/cards');
+                  statsCards.setAttribute('hx-trigger', 'load, every 30s');
+                  statsCards.setAttribute('hx-indicator', '#stats-loading-spinner');
+                  statsCards.setAttribute('hx-target', 'this');
+                  statsCards.setAttribute('hx-swap', 'innerHTML');
+                  console.log('Stats: HTMX enabled for live mode');
+                }
+              }
+            }
+          }, 100);
+        }
+      });
+    });
+
+    // Global function to render stats cards
+    window.renderStatsCards = function(data, containerId) {
+      console.log('Stats cards: Rendering data for', containerId);
+      console.log('Stats cards: Data received:', data);
+      
+      if (!data || (!data.counts && !data.v1Counts)) {
+        console.error('Stats cards: Invalid data structure - missing counts or v1Counts');
+        return;
+      }
+      
+      // Use v1Counts if counts is not available (for demo data compatibility)
+      const counts = data.counts || data.v1Counts;
+      const percentages = data.percentages || {};
+      const v1Total = data.v1Total || 0;
+      
+      // Calculate percentages if not provided
+      const calculatedPercentages = {};
+      Object.keys(counts).forEach(status => {
+        if (counts[status] > 0 && v1Total > 0) {
+          calculatedPercentages[status] = ((counts[status] / v1Total) * 100).toFixed(1);
+        } else {
+          calculatedPercentages[status] = '0.0';
+        }
+      });
+      
+      // Use provided percentages or calculated ones
+      const finalPercentages = Object.keys(percentages).length > 0 ? percentages : calculatedPercentages;
+      
+      console.log('Stats cards: Counts:', counts);
+      console.log('Stats cards: Percentages:', finalPercentages);
+      console.log('Stats cards: Total:', v1Total);
+      
+      // Generate status cards HTML
+      const statusCardsHtml = Object.keys(counts).map(status => {
+        const count = counts[status];
+        const percentage = finalPercentages[status] || '0.0';
+        
+        return `
+          <div class="stat-card ${status}" onclick="window.location.href='/list/${status}'">
+            <div class="stat-number">${count}</div>
+            <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
+            <div class="stat-percentage">${percentage}%</div>
+          </div>
+        `;
+      }).join('');
+      
+      const statsCards = document.getElementById(containerId);
+      if (statsCards) {
+        statsCards.innerHTML = `
+          <div class="stats-cards-container">
+            <div class="status-cards-grid">
+              ${statusCardsHtml}
+            </div>
+            
+            <!-- Total card separated and centered -->
+            <div class="total-card-container">
+              <div class="stat-card total">
+                <div class="stat-number">${v1Total}</div>
+                <div class="stat-label">Total</div>
+                <div class="stat-percentage">100%</div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        console.log('Stats cards: Successfully rendered');
+      } else {
+        console.error('Stats cards: Container not found:', containerId);
+      }
+    };
+
+    // Initialize Stats Page Charts Manager
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.StatsPageChartsManager) {
+        window.statsPageCharts = new StatsPageChartsManager();
+      } else {
+        console.error('StatsPageChartsManager not available');
+      }
+    });
+  </script>
+</body>
+</html>

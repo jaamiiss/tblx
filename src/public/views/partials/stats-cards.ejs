@@ -1,0 +1,62 @@
+<% if (typeof stats !== 'undefined' && stats) { %>
+  <div class="stats-cards-container">
+    <div class="status-cards-grid">
+      <% 
+        const statuses = ['deceased', 'active', 'incarcerated', 'redacted', 'unknown', 'captured'];
+        const v1Ranges = stats.v1Ranges || {};
+        const v1RangesToInclude = ['0-50', '51-100', '101-150', '151-200']; // Exclude 200+
+        
+        // Calculate V1 totals
+        let v1Total = 0;
+        v1RangesToInclude.forEach(range => {
+          if (v1Ranges[range]) {
+            v1Total += v1Ranges[range].total || 0;
+          }
+        });
+        
+        // Calculate V1 counts for each status
+        const v1Counts = {};
+        statuses.forEach(status => {
+          v1Counts[status] = 0;
+          v1RangesToInclude.forEach(range => {
+            if (v1Ranges[range]) {
+              v1Counts[status] += v1Ranges[range][status] || 0;
+            }
+          });
+        });
+        
+        statuses.forEach(status => {
+          const v1Count = v1Counts[status] || 0;
+          const v1Percentage = v1Total > 0 ? ((v1Count / v1Total) * 100).toFixed(1) : '0.0';
+      %>
+        <div class="stat-card <%= status %>" onclick="window.location.href='/list/<%= status %>'">
+          <div class="stat-number"><%= v1Count %></div>
+          <div class="stat-label"><%= status.charAt(0).toUpperCase() + status.slice(1) %></div>
+          <div class="stat-percentage"><%= v1Percentage %>%</div>
+        </div>
+      <% }); %>
+    </div>
+    
+    <!-- Total card separated and centered -->
+    <div class="total-card-container">
+      <div class="stat-card total">
+        <div class="stat-number"><%= v1Total %></div>
+        <div class="stat-label">Total</div>
+        <div class="stat-percentage">100%</div>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <div class="stats-loading">
+    <p>Loading statistics...</p>
+  </div>
+<% } %>
+
+
+
+
+
+
+
+
+
