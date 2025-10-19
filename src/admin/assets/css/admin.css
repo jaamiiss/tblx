@@ -81,6 +81,37 @@
   font-weight: bold;
 }
 
+/* User Info Styles */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.username {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.logout-link {
+  color: white !important;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.logout-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 /* Admin Main Content */
 .admin-main {
   flex: 1;

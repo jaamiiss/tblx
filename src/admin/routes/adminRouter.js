@@ -7,6 +7,9 @@ const path = require('path');
 router.use(express.json({ limit: '10mb' }));
 router.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Import authentication middleware
+const { requireAuth, redirectIfAuthenticated, handleLogin, handleLogout } = require('../middleware/auth');
+
 require('dotenv').config();
 const cache = require('memory-cache');
 
@@ -232,17 +235,38 @@ router.post('/api/toggle-debug', (req, res) => {
   });
 });
 
-// Routes
+// Authentication Routes
+
+// Login page (redirect if already authenticated)
+router.get('/login', redirectIfAuthenticated, (req, res) => {
+  res.render('login', { 
+    title: 'Admin Login',
+    error: null,
+    success: null
+  });
+});
+
+// Handle login form submission
+router.post('/login', redirectIfAuthenticated, handleLogin);
+
+// Logout
+router.get('/logout', handleLogout);
+
+// Protected Routes (require authentication)
+
+// Apply authentication middleware to all API routes
+router.use('/api', requireAuth);
 
 // Admin dashboard
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const items = await getAllItems();
     res.render('dashboard', { 
       items: items,
       totalItems: items.length,
       pageTitle: 'Admin Dashboard',
-      activeTab: 'dashboard'
+      activeTab: 'dashboard',
+      user: req.user
     });
   } catch (error) {
     console.error('Admin Router: Error in dashboard route:', error);
@@ -251,14 +275,15 @@ router.get('/', async (req, res) => {
 });
 
 // Admin items page
-router.get('/items', async (req, res) => {
+router.get('/items', requireAuth, async (req, res) => {
   try {
     const items = await getAllItems();
     res.render('items', { 
       items: items,
       totalItems: items.length,
       pageTitle: 'Item Management',
-      activeTab: 'items'
+      activeTab: 'items',
+      user: req.user
     });
   } catch (error) {
     console.error('Admin Router: Error in items route:', error);

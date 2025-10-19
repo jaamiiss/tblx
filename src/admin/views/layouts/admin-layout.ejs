@@ -15,6 +15,12 @@
         <a href="/admin" class="nav-link <%= activeTab === 'dashboard' ? 'active' : '' %>">Dashboard</a>
         <a href="/admin/items" class="nav-link <%= activeTab === 'items' ? 'active' : '' %>">Items</a>
         <a href="/" class="nav-link public-link">View Site</a>
+        <% if (typeof user !== 'undefined' && user) { %>
+          <div class="user-info">
+            <span class="username">Welcome, <%= user.username %></span>
+            <a href="/admin/logout" class="nav-link logout-link">Logout</a>
+          </div>
+        <% } %>
       </div>
     </div>
   </header>
