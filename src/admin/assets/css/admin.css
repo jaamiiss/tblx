@@ -155,7 +155,7 @@
 }
 
 .status-indicator {
-  background: #4CAF50;
+  background: #FE0000;
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
@@ -192,7 +192,7 @@
 .status-indicator {
   display: inline-block;
   padding: 8px 16px;
-  background: #4CAF50;
+  background: #FE0000;
   color: white;
   border-radius: 20px;
   font-size: 0.9rem;
@@ -263,27 +263,27 @@
 }
 
 .stat-card.deceased {
-  border-color: #f44336;
+  border-color: #cc0000;
 }
 
 .stat-card.active {
-  border-color: #4CAF50;
+  border-color: #FE0000;
 }
 
 .stat-card.incarcerated {
-  border-color: #ff9800;
+  border-color: #cc0000;
 }
 
 .stat-card.redacted {
-  border-color: #9c27b0;
+  border-color: #cc0000;
 }
 
 .stat-card.unknown {
-  border-color: #607d8b;
+  border-color: #cc0000;
 }
 
 .stat-card.captured {
-  border-color: #795548;
+  border-color: #cc0000;
 }
 
 .stat-card.total {
@@ -327,7 +327,7 @@
 
 /* Quota Status Card */
 .stat-card#quota-status-card {
-  border-color: #f44336;
+  border-color: #cc0000;
   background: #ffebee;
 }
 
@@ -411,7 +411,7 @@
 }
 
 .debug-btn.active {
-  background: #4CAF50;
+  background: #FE0000;
 }
 
 .debug-btn.active:hover {
@@ -1455,7 +1455,7 @@ body:not(.admin-header-loaded) .admin-header {
 }
 
 .notification-success {
-  background: #4CAF50;
+  background: #FE0000;
 }
 
 .notification-error {

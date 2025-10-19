@@ -5,6 +5,7 @@
 
 const express = require('express');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 // Import routes
 const publicRoutes = require('./src/public/routes/listRouter');
@@ -36,6 +37,7 @@ app.use('/assets/build', express.static(path.join(__dirname, 'src/public/assets/
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Routes
 app.use('/', publicRoutes);
