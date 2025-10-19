@@ -201,30 +201,9 @@ const chartConfig = {
       }
       
       // Charts will load automatically via HTMX
-      // No need for complex managers
-      
-      // Initialize charts after a short delay to ensure all scripts are loaded
-      setTimeout(() => {
-        if (window.StatsPageChartsManager) {
-          console.log('Stats: Creating StatsPageChartsManager instance...');
-          window.statsPageCharts = new StatsPageChartsManager();
-          
-          // Simple button initialization after charts are ready
-          setTimeout(() => {
-            console.log('Stats: Attempting button initialization...');
-            if (window.chartButtonsManager && window.statsPageCharts) {
-              console.log('Stats: Initializing buttons with chartButtonsManager...');
-              window.chartButtonsManager.initializeButtons(window.statsPageCharts);
-              } else {
-              console.error('Stats: chartButtonsManager or statsPageCharts not available');
-              console.log('Stats: chartButtonsManager available:', !!window.chartButtonsManager);
-              console.log('Stats: statsPageCharts available:', !!window.statsPageCharts);
-            }
-          }, 2000); // Wait 2 seconds for charts to load
-        } else {
-          console.error('StatsPageChartsManager not available');
-        }
-      }, 200);
+      // The StatsPageChartsManager will initialize itself via its own DOMContentLoaded listener
+      console.log('Stats Layout: DOMContentLoaded fired');
+      console.log('Stats Layout: window.statsPageCharts available:', !!window.statsPageCharts);
     });
   </script>
 
