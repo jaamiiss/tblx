@@ -40,7 +40,12 @@ class DemoManager {
    */
   handleHTMXFallback(path) {
     this.logger.info(`Demo Manager: Handling HTMX fallback for ${path}`);
-    this.enableDemoMode();
+    
+    // Only enable demo mode if not already enabled
+    if (!this.demoMode) {
+      this.enableDemoMode();
+    }
+    
     this.loadDemoDataForCurrentPage();
   }
 
@@ -72,8 +77,10 @@ class DemoManager {
     try {
       this.logger.info(`Demo Manager: Loading demo data for ${pageId} from ${endpoint}`);
 
-      // Show loading indicator
-      this.showLoadingIndicator(containerId);
+      // Only show loading indicator if we're actually in demo mode
+      if (this.demoMode) {
+        this.showLoadingIndicator(containerId);
+      }
 
       // Check cache first
       const cacheKey = `${pageId}_${endpoint}`;
@@ -117,7 +124,8 @@ class DemoManager {
     }
 
     if (typeof renderFunction === 'function') {
-      container.innerHTML = renderFunction(data);
+      // Call render function with data and containerId
+      renderFunction(data, containerId);
       this.logger.info(`Demo Manager: Rendered demo data in ${containerId}`);
     } else {
       this.logger.error(`Demo Manager: Render function not available for ${containerId}`);
@@ -126,8 +134,10 @@ class DemoManager {
     // Hide loading indicator
     this.hideLoadingIndicator(containerId);
 
-    // Show demo banner
-    this.showDemoDataBanner();
+    // Show demo banner only if we're in demo mode
+    if (this.demoMode) {
+      this.showDemoDataBanner();
+    }
   }
 
   /**
@@ -186,12 +196,6 @@ class DemoManager {
    * Show demo data banner
    */
   showDemoDataBanner() {
-    const banner = document.getElementById('demo-data-banner');
-    if (!banner) {
-      this.logger.warn('Demo Manager: Demo banner element not found');
-      return;
-    }
-
     // Update banner content based on current page
     const currentPath = window.location.pathname;
     let context = 'Demo data';
@@ -203,24 +207,26 @@ class DemoManager {
     } else if (currentPath.includes('/status')) {
       context = 'Status using demo data';
     }
-
-    const contextElement = banner.querySelector('.demo-banner-context');
-    if (contextElement) {
-      contextElement.textContent = context;
+    
+    // Use the global banner function
+    if (window.showDemoBanner) {
+      window.showDemoBanner(context);
+      this.logger.info(`Demo Manager: Demo banner shown with context: ${context}`);
+    } else {
+      this.logger.warn('Demo Manager: showDemoBanner function not available');
     }
-
-    banner.style.display = 'block';
-    this.logger.info('Demo Manager: Demo banner displayed');
   }
 
   /**
    * Hide demo data banner
    */
   hideDemoBanner() {
-    const banner = document.getElementById('demo-data-banner');
-    if (banner) {
-      banner.style.display = 'none';
+    // Use the global banner function
+    if (window.hideDemoBanner) {
+      window.hideDemoBanner();
       this.logger.info('Demo Manager: Demo banner hidden');
+    } else {
+      this.logger.warn('Demo Manager: hideDemoBanner function not available');
     }
   }
 
@@ -300,6 +306,62 @@ class DemoManager {
       keys: Array.from(this.cache.keys())
     };
   }
+
+  /**
+   * Check if current page has demo data loaded
+   */
+  hasCurrentPageDemoData() {
+    const currentPath = window.location.pathname;
+    let pageId;
+    
+    if (currentPath.includes('/list/v2')) {
+      pageId = 'list-v2';
+    } else if (currentPath.includes('/list') || currentPath.includes('/the-blacklist')) {
+      pageId = 'list-v1';
+    } else if (currentPath.includes('/stats')) {
+      pageId = 'stats-cards';
+    } else if (currentPath.includes('/status/')) {
+      const status = currentPath.split('/status/')[1];
+      pageId = `status-${status}`;
+    }
+    
+    if (pageId) {
+      const cacheKey = `${pageId}_/dummy-data/${pageId.includes('list') ? (pageId.includes('v2') ? 'v2' : 'v1') : (pageId.includes('stats') ? 'stats' : 'v1')}`;
+      return this.cache.has(cacheKey);
+    }
+    
+    return false;
+  }
+
+  /**
+   * Handle live data loaded event
+   */
+  onLiveDataLoaded(dataType, containerId) {
+    this.logger.info(`Demo Manager: Live data loaded for ${dataType}`);
+    
+    // Hide demo banner using proper method
+    this.hideDemoBanner();
+    
+    // Update cache with live data flag
+    this.cache.set(`${dataType}-live`, true);
+  }
+
+  /**
+   * Check quota status
+   */
+  checkQuotaStatus() {
+    this.logger.info('Demo Manager: Checking quota status');
+    
+    // For now, just log that quota check was performed
+    // This could be expanded to check actual quota limits
+    this.logger.info('Demo Manager: Quota status check completed');
+    
+    return {
+      status: 'ok',
+      remaining: 'unlimited',
+      resetTime: null
+    };
+  }
 }
 
 // Export for use in other modules
@@ -308,3 +370,12 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.DemoManager = DemoManager;
 }
+
+// Global initialization function
+window.initDemoManager = function() {
+  if (!window.demoManager) {
+    window.demoManager = new DemoManager();
+    window.demoManager.init();
+  }
+  return window.demoManager;
+};

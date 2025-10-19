@@ -27,6 +27,7 @@ class ItemRenderer {
     const status = item.status || 'unknown';
     const v1 = item.v1 !== undefined ? item.v1 : 0;
     const v2 = item.v2 !== undefined ? item.v2 : 0;
+    const category = item.category || '';
     
     // Extract new fields
     const image = item.image || '';
@@ -37,12 +38,44 @@ class ItemRenderer {
     // Determine item number based on options
     const itemNumber = useV2ForNumber ? v2 : v1;
 
-    // Generate status HTML
-    const statusHTML = this.generateStatusHTML(name, status);
+    // Generate semantic HTML structure
+    const itemContent = this.generateSemanticItemHTML(name, status, itemNumber, showV1, showV2, v1, v2, category, showAppearance, showBio, showImage, showLink, appearance, bio, image, link);
 
+    // Wrap in legend-item if requested (for consistent styling)
+    if (includeLegendWrapper) {
+      return `<div class="${status}">${itemContent}</div>`;
+    }
+
+    return itemContent;
+  }
+
+  /**
+   * Generate semantic HTML structure for better SEO and accessibility
+   * @param {string} name - Item name
+   * @param {string} status - Item status
+   * @param {number} itemNumber - Primary item number
+   * @param {boolean} showV1 - Whether to show V1 number
+   * @param {boolean} showV2 - Whether to show V2 number
+   * @param {number} v1 - V1 value
+   * @param {number} v2 - V2 value
+   * @param {string} category - Item category
+   * @param {boolean} showAppearance - Whether to show appearance info
+   * @param {boolean} showBio - Whether to show bio
+   * @param {boolean} showImage - Whether to show image
+   * @param {boolean} showLink - Whether to show link
+   * @param {Array} appearance - Appearance data
+   * @param {string} bio - Bio text
+   * @param {string} image - Image URL
+   * @param {string} link - Link URL
+   * @returns {string} Semantic HTML string
+   */
+  static generateSemanticItemHTML(name, status, itemNumber, showV1, showV2, v1, v2, category, showAppearance, showBio, showImage, showLink, appearance, bio, image, link) {
     // Generate guide HTML
     const guideHTML = this.generateGuideHTML(itemNumber, showV1, showV2, v1, v2);
-
+    
+    // Generate status HTML
+    const statusHTML = this.generateStatusHTML(name, status);
+    
     // Generate additional info HTML if requested
     let additionalHTML = '';
     if (showAppearance && appearance.length > 0) {
@@ -58,14 +91,27 @@ class ItemRenderer {
       additionalHTML += this.generateLinkHTML(link);
     }
 
-    const itemContent = `<div class="list-item">${guideHTML} ${statusHTML}${additionalHTML}</div>`;
-
-    // Wrap in legend-item if requested (for consistent styling)
-    if (includeLegendWrapper) {
-      return `<div class="${status}">${itemContent}</div>`;
-    }
-
-    return itemContent;
+    // Create semantic structure with proper ARIA labels and roles
+    const ariaLabel = `${name}, status: ${status}${category ? `, category: ${category}` : ''}`;
+    const itemId = `item-${itemNumber}`;
+    
+    return `
+      <article class="list-item" 
+               id="${itemId}" 
+               role="listitem" 
+               aria-label="${ariaLabel}" 
+               tabindex="0"
+               itemscope 
+               itemtype="https://schema.org/Person"
+               data-item-id="${itemNumber}"
+               data-item-status="${status}">
+        <header class="item-header">
+          ${guideHTML}
+          ${statusHTML}
+        </header>
+        ${additionalHTML ? `<div class="item-content" role="region" aria-label="Additional information">${additionalHTML}</div>` : ''}
+      </article>
+    `;
   }
 
   /**
@@ -76,10 +122,10 @@ class ItemRenderer {
    */
   static generateStatusHTML(name, status) {
     if (status === "redacted") {
-      return '<span class="item-redacted"></span>';
+      return '<span class="item-redacted" aria-label="Redacted information" role="img"></span>';
     }
 
-    return `<span><span class="name">${name}</span><span class="dash">&ndash;</span><span class="status ${status}">${status}</span></span>`;
+    return `<span><span class="name" itemprop="name">${name}</span><span class="dash" aria-hidden="true">&ndash;</span><span class="status ${status}" aria-label="Status: ${status}" itemprop="description">${status}</span></span>`;
   }
 
   /**
@@ -93,15 +139,18 @@ class ItemRenderer {
    */
   static generateGuideHTML(itemNumber, showV1, showV2, v1, v2) {
     let guideText = `#${itemNumber}.`;
+    let ariaLabel = `Item number ${itemNumber}`;
 
     // Add additional numbers if requested
     if (showV1 && showV2) {
       guideText = `#${v1}/${v2}.`;
+      ariaLabel = `Item numbers V1: ${v1}, V2: ${v2}`;
     } else if (showV2 && !showV1) {
       guideText = `#${v2}.`;
+      ariaLabel = `Item number V2: ${v2}`;
     }
 
-    return `<span class="guide">${guideText}</span>`;
+    return `<span class="guide" aria-label="${ariaLabel}">${guideText}</span>`;
   }
 
   /**
@@ -161,7 +210,7 @@ class ItemRenderer {
       .map(app => `S${app.season}E${app.episode}`)
       .join(', ');
     
-    return `<div class="item-appearance">Appearances: ${appearanceText}</div>`;
+    return `<div class="item-appearance" role="text" aria-label="Episode appearances">Appearances: ${appearanceText}</div>`;
   }
 
   /**
@@ -173,7 +222,7 @@ class ItemRenderer {
     if (!bio) return '';
     
     const truncatedBio = bio.length > 100 ? bio.substring(0, 100) + '...' : bio;
-    return `<div class="item-bio" title="${bio}">${truncatedBio}</div>`;
+    return `<div class="item-bio" role="text" aria-label="Character biography" title="${bio}">${truncatedBio}</div>`;
   }
 
   /**
@@ -184,7 +233,7 @@ class ItemRenderer {
   static generateImageHTML(imageUrl) {
     if (!imageUrl) return '';
     
-    return `<div class="item-image"><img src="${imageUrl}" alt="Character image" style="width: 20px; height: 20px; border-radius: 3px;"></div>`;
+    return `<div class="item-image" role="img" aria-label="Character image"><img src="${imageUrl}" alt="Character image" style="width: 20px; height: 20px; border-radius: 3px;"></div>`;
   }
 
   /**
@@ -195,7 +244,7 @@ class ItemRenderer {
   static generateLinkHTML(linkUrl) {
     if (!linkUrl) return '';
     
-    return `<div class="item-link"><a href="${linkUrl}" target="_blank" rel="noopener noreferrer">🔗</a></div>`;
+    return `<div class="item-link"><a href="${linkUrl}" target="_blank" rel="noopener noreferrer" aria-label="External link to character information">🔗</a></div>`;
   }
 
   /**

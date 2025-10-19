@@ -1,0 +1,19 @@
+{
+  "buildTime": "2025-10-19T18:23:24.011Z",
+  "version": "2.7.0",
+  "assets": {
+    "css": {
+      "style.min.css": "22.14 KB",
+      "list-pages.min.css": "6.23 KB",
+      "status-pages.min.css": "3.75 KB",
+      "charts-pages.min.css": "13.68 KB",
+      "bundle.min.css": "43.86 KB"
+    },
+    "js": {
+      "core.min.js": "15.99 KB",
+      "managers.min.js": "15.67 KB",
+      "charts.min.js": "45.52 KB",
+      "utils.min.js": "12.73 KB"
+    }
+  }
+}

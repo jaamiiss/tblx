@@ -46,25 +46,28 @@ class ChartUtils {
         },
         tooltip: {
           enabled: true,
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          titleColor: '#fff',
-          bodyColor: '#fff',
-          borderColor: '#FE0000',
-          borderWidth: 2,
-          cornerRadius: 8,
-          displayColors: true,
-          padding: 16,
-          titleSpacing: 8,
-          bodySpacing: 8,
-          titleFont: {
-            size: 16,
-            weight: 'bold',
-            family: 'TBL-2, monospace'
-          },
-          bodyFont: {
-            size: 14,
-            family: 'TBL-2, monospace'
-          },
+          ...(window.ChartColors ? window.ChartColors.getTooltipConfig() : {
+            backgroundColor: '#ffffff',
+            titleColor: '#000000',
+            bodyColor: '#000000',
+            borderColor: '#FE0000',
+            borderWidth: 2,
+            cornerRadius: 8,
+            displayColors: true,
+            padding: 20,  // Increased padding
+            titleSpacing: 10,  // Increased spacing
+            bodySpacing: 8,
+            titleFont: {
+              size: 16,
+              weight: 'bold',
+              family: "'TBL-2', monospace"
+            },
+            bodyFont: {
+              size: 14,
+              family: "'TBL-2', monospace"
+            }
+          }),
+          // Custom styling for Chart.js tooltip color indicators
           callbacks: {
             title: function(context) {
               return context[0].label;
@@ -76,11 +79,15 @@ class ChartUtils {
               return ` ${value} (${percentage}%)`;
             },
             labelColor: function(context) {
+              // For pie charts, use the background color from the dataset
+              const backgroundColor = context.dataset.backgroundColor[context.dataIndex] || context.dataset.backgroundColor;
               return {
-                borderColor: context.dataset.backgroundColor[context.dataIndex],
-                backgroundColor: context.dataset.backgroundColor[context.dataIndex],
-                borderWidth: 2,
-                borderRadius: 4
+                borderColor: backgroundColor,
+                backgroundColor: backgroundColor,
+                borderWidth: 0,
+                borderRadius: 6, // Half of width/height for perfect circle
+                width: 12,
+                height: 12
               };
             }
           }
@@ -157,28 +164,93 @@ class ChartUtils {
     const defaultOptions = {
       responsive: true,
       maintainAspectRatio: false,
-      scales: {
-        x: {
-          type: 'linear',
-          position: 'bottom'
-        },
-        y: {
-          beginAtZero: true
-        }
-      },
       plugins: {
         legend: {
           display: false // Disable built-in legend, we'll create custom one
+        },
+        tooltip: {
+          backgroundColor: '#ffffff',
+          titleColor: '#000000',
+          bodyColor: '#000000',
+          borderColor: '#FE0000',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 18,
+          displayColors: true,
+          titleFont: {
+            size: 14,
+            weight: 'bold',
+            family: "'TBL-2', monospace"
+          },
+          bodyFont: {
+            size: 12,
+            family: "'TBL-2', monospace"
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: false  // Hide x-axis title by default
+          }
+        },
+        y: {
+          title: {
+            display: false  // Hide y-axis title by default
+          }
         }
       }
     };
 
-    const chartOptions = { ...defaultOptions, ...options };
+    // Deep merge options to preserve scales configuration from custom options
+    const chartOptions = {
+      ...defaultOptions,
+      ...options,
+      plugins: {
+        ...defaultOptions.plugins,
+        ...options.plugins,
+        tooltip: {
+          ...defaultOptions.plugins.tooltip,
+          ...(options.plugins?.tooltip || {}),
+          callbacks: {
+            ...(defaultOptions.plugins.tooltip?.callbacks || {}),
+            ...(options.plugins?.tooltip?.callbacks || {})
+          }
+        }
+      },
+      scales: {
+        ...defaultOptions.scales,
+        ...options.scales
+      }
+    };
+    
+    // Debug: Log the final chart options
+    console.log('Chart Utils - Final Chart Options:', JSON.stringify(chartOptions, null, 2));
+    console.log('Chart Utils - Scales specifically:', JSON.stringify(chartOptions.scales, null, 2));
+    console.log('Chart Utils - Tooltip specifically:', JSON.stringify(chartOptions.plugins.tooltip, null, 2));
+    
+    // Debug: Check if tooltip callbacks exist in final config
+    if (chartOptions.plugins?.tooltip?.callbacks) {
+      console.log('Chart Utils - Tooltip Callbacks Found:', Object.keys(chartOptions.plugins.tooltip.callbacks));
+      console.log('Chart Utils - Tooltip Callbacks Content:', chartOptions.plugins.tooltip.callbacks);
+      
+      // Test if callbacks are actually functions
+      const callbacks = chartOptions.plugins.tooltip.callbacks;
+      console.log('Chart Utils - Callback Types:', {
+        title: typeof callbacks.title,
+        label: typeof callbacks.label,
+        labelColor: typeof callbacks.labelColor
+      });
+    } else {
+      console.log('Chart Utils - No Tooltip Callbacks Found!');
+    }
+    
     const chartInstance = new Chart(ctx, {
       type: 'scatter',
       data: data,
       options: chartOptions
     });
+
 
     this.chartInstances.set(canvasId, chartInstance);
     return chartInstance;

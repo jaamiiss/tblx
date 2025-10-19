@@ -1,0 +1,145 @@
+<!-- Page-Specific Scripts for List Layout -->
+<script>
+  // ========================================
+  // LIST-SPECIFIC DEMO DATA HANDLING
+  // ========================================
+  document.addEventListener('loadPageDemoData', function(event) {
+    if (event.detail.pageType === 'list') {
+      console.log('List: Loading demo data for list page');
+      loadListDemoData();
+    }
+  });
+
+  function loadListDemoData() {
+    const currentVersion = '<%= activeTab || "v1" %>';
+    const pageId = `list-${currentVersion}`;
+    const endpoint = currentVersion === 'v1' ? '/version1' : 
+                    currentVersion === 'v2' ? '/version2' : 
+                    currentVersion === 'the-blacklist' ? '/the-blacklist?format=json' : '/version1';
+    
+    if (window.demoManager) {
+      window.demoManager.loadDemoDataForPage(pageId, endpoint, 'dataList', window.renderListData);
+    }
+  }
+
+  // ========================================
+  // LIST-SPECIFIC RENDER FUNCTION
+  // ========================================
+  window.renderListData = function(data, containerId) {
+    const renderStartTime = performance.now();
+    
+    // Handle both array and object formats
+    const items = Array.isArray(data) ? data : (data.items || []);
+    console.log(`Render List Data: Starting render for ${containerId} with ${items.length} items`);
+    console.log(`Render List Data: Data format - isArray: ${Array.isArray(data)}, hasItems: ${!!data.items}, itemsLength: ${items.length}`);
+    
+    const container = document.getElementById(containerId);
+    if (!container) {
+      console.log(`Render List Data: Container ${containerId} not found`);
+      return;
+    }
+    
+    if (!items || items.length === 0) {
+      console.log(`Render List Data: No items to render for ${containerId}`);
+      // Show empty state instead of rendering nothing
+      container.innerHTML = window.QuotaMessageHelper.generateNoData();
+      return;
+    }
+    
+    // Validate that items have required properties
+    const validItems = items.filter(item => item && typeof item === 'object' && item.name);
+    if (validItems.length === 0) {
+      console.log(`Render List Data: No valid items found for ${containerId}`);
+      container.innerHTML = window.QuotaMessageHelper.generateInvalidData();
+      return;
+    }
+    
+    console.log(`Render List Data: Rendering ${validItems.length} valid items out of ${items.length} total items`);
+
+    // Sort items by V1 number for proper column distribution
+    const sortedItems = validItems.sort((a, b) => {
+      const v1A = a.v1 !== undefined ? a.v1 : 0;
+      const v1B = b.v1 !== undefined ? b.v1 : 0;
+      return v1A - v1B;
+    });
+
+    // Create column containers for range-based layout
+    const columnRanges = [
+      { min: 0, max: 50, label: '0-50' },
+      { min: 51, max: 101, label: '51-101' },
+      { min: 102, max: 152, label: '102-152' },
+      { min: 153, max: Infinity, label: '153+' }
+    ];
+
+    const columns = columnRanges.map(range => ({
+      range: range,
+      items: []
+    }));
+
+    // Distribute items into appropriate columns based on V1 ranges
+    sortedItems.forEach((item) => {
+      const v1 = item.v1 !== undefined ? item.v1 : 0;
+      
+      for (let i = 0; i < columns.length; i++) {
+        const column = columns[i];
+        if (v1 >= column.range.min && v1 <= column.range.max) {
+          column.items.push(item);
+          break;
+        }
+      }
+    });
+
+    // Use document fragment for better performance
+    const fragment = document.createDocumentFragment();
+    
+    // Render items in column order, maintaining range grouping
+    columns.forEach((column, columnIndex) => {
+      console.log(`Render List Data: Column ${columnIndex + 1} (${column.range.label}): ${column.items.length} items`);
+      
+      column.items.forEach((item, itemIndex) => {
+        // Validate item data before rendering
+        if (!item || typeof item !== 'object') {
+          console.warn(`Render List Data: Invalid item in column ${columnIndex}, index ${itemIndex}:`, item);
+          return;
+        }
+
+        // Use unified ItemRenderer for consistent rendering with legend wrapper
+        const itemHTML = window.ItemRenderer.renderItem(item, {
+          showV1: true,
+          showV2: false,
+          useV2ForNumber: false,
+          includeLegendWrapper: true
+        });
+        
+        // Create a temporary div to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = itemHTML;
+        fragment.appendChild(tempDiv.firstElementChild);
+      });
+    });
+    
+    // Clear container and append fragment
+    container.innerHTML = '';
+    container.appendChild(fragment);
+    
+    // Hide loading spinner immediately
+    const spinner = document.getElementById('spinner');
+    if (spinner) {
+      spinner.style.display = 'none';
+    }
+    
+    // Force immediate visibility
+    container.style.display = 'block';
+    container.style.visibility = 'visible';
+    
+    const renderEndTime = performance.now();
+    console.log(`Render List Data: Completed render for ${containerId} in ${(renderEndTime - renderStartTime).toFixed(2)}ms`);
+    
+    // Verify content is visible
+    setTimeout(() => {
+      const hasContent = container.children.length > 0;
+      const isVisible = container.style.display !== 'none' && container.style.visibility !== 'hidden';
+      console.log(`Render List Data: Content verification - hasContent: ${hasContent}, isVisible: ${isVisible}, children: ${container.children.length}`);
+    }, 100);
+  };
+</script>

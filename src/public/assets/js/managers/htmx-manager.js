@@ -7,8 +7,8 @@ class HTMXManager {
     this.logger = window.logManager ? window.logManager.createModuleLogger('HTMXManager') : console;
     this.requestStates = new Map();
     this.fallbackPaths = [
-      '/version1', '/version2', '/stats/cards', 
-      '/stats/chart/pie', '/stats/chart/bar', '/stats/chart/scatter',
+      '/version1', '/version2', '/list', '/list/v2', '/the-blacklist',
+      '/stats/cards', '/stats/chart/pie', '/stats/chart/bar', '/stats/chart/scatter',
       '/status/deceased', '/status/active', '/status/incarcerated',
       '/status/redacted', '/status/unknown', '/status/captured'
     ];
@@ -32,27 +32,39 @@ class HTMXManager {
 
     // Listen for HTMX request failures
     document.addEventListener('htmx:responseError', (event) => {
+      this.logger.info('HTMX Manager: responseError event received');
       this.handleHTMXFailure(event, 'responseError');
     });
 
     // Listen for HTMX request timeouts
     document.addEventListener('htmx:timeout', (event) => {
+      this.logger.info('HTMX Manager: timeout event received');
       this.handleHTMXFailure(event, 'timeout');
     });
 
     // Listen for HTMX request aborts
     document.addEventListener('htmx:sendAbort', (event) => {
+      this.logger.info('HTMX Manager: sendAbort event received');
       this.handleHTMXFailure(event, 'sendAbort');
     });
 
     // Listen for successful HTMX requests
     document.addEventListener('htmx:afterRequest', (event) => {
+      this.logger.info('HTMX Manager: afterRequest event received');
       this.handleHTMXSuccess(event);
     });
 
     // Listen for HTMX content swaps
     document.addEventListener('htmx:afterSwap', (event) => {
+      this.logger.info('HTMX Manager: afterSwap event received');
       this.handleHTMXSwap(event);
+    });
+
+    // Additional fallback: Check for empty responses after a delay
+    document.addEventListener('htmx:afterRequest', (event) => {
+      setTimeout(() => {
+        this.checkForEmptyResponse(event);
+      }, 1000);
     });
   }
 
@@ -63,6 +75,8 @@ class HTMXManager {
     const target = event.detail.target;
     const path = event.detail.pathInfo.requestPath;
     const requestId = `${target.id}_${path}`;
+
+    this.logger.info(`HTMX ${failureType} detected for path: ${path}, target: ${target.id}`);
 
     // Prevent duplicate fallback for same request
     if (this.requestStates.get(requestId) === 'fallback_triggered') {
@@ -79,13 +93,52 @@ class HTMXManager {
 
       // Notify demo manager to handle fallback
       if (window.demoManager) {
+        this.logger.info(`HTMX Manager: Calling demoManager.handleHTMXFallback(${path})`);
         window.demoManager.handleHTMXFallback(path);
+      } else {
+        this.logger.warn('HTMX Manager: demoManager not available');
       }
 
       // Clean up request state after delay
       setTimeout(() => {
         this.requestStates.delete(requestId);
       }, 10000);
+    } else {
+      this.logger.info(`HTMX Manager: Path ${path} not in fallback paths, skipping demo fallback`);
+    }
+  }
+
+  /**
+   * Check for empty responses and trigger fallback if needed
+   */
+  checkForEmptyResponse(event) {
+    const target = event.detail.target;
+    const path = event.detail.pathInfo.requestPath;
+    const requestId = `${target.id}_${path}`;
+    
+    // Don't check if we already handled this request
+    if (this.requestStates.get(requestId) === 'fallback_triggered') {
+      this.logger.debug(`HTMX Manager: Already handled ${requestId}, skipping empty response check`);
+      return;
+    }
+    
+    // Don't check if the request was successful
+    if (event.detail.successful || this.requestStates.get(requestId) === 'successful') {
+      this.logger.debug(`HTMX Manager: Request was successful for ${requestId}, skipping empty response check`);
+      return;
+    }
+    
+    // Check if target is empty and should have content
+    if (target && target.id === 'dataList' && (!target.innerHTML || target.innerHTML.trim() === '')) {
+      this.logger.info(`HTMX Manager: Empty response detected for ${path}, triggering demo fallback`);
+      
+      if (this.shouldFallbackToDemo(path)) {
+        if (window.demoManager) {
+          this.logger.info(`HTMX Manager: Calling demoManager.handleHTMXFallback(${path}) for empty response`);
+          this.requestStates.set(requestId, 'fallback_triggered');
+          window.demoManager.handleHTMXFallback(path);
+        }
+      }
     }
   }
 
@@ -93,8 +146,15 @@ class HTMXManager {
    * Handle successful HTMX requests
    */
   handleHTMXSuccess(event) {
+    const target = event.detail.target;
+    const path = event.detail.pathInfo.requestPath;
+    const requestId = `${target.id}_${path}`;
+    
     if (event.detail.successful) {
-      this.logger.debug('HTMX request successful');
+      this.logger.debug(`HTMX request successful for ${requestId}`);
+      
+      // Mark this request as successful to prevent demo fallback
+      this.requestStates.set(requestId, 'successful');
       
       // Hide demo banner if live data loaded successfully
       if (window.demoManager) {

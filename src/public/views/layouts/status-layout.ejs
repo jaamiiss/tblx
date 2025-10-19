@@ -1,31 +1,14 @@
 <%- include('../partials/head', { 
   title: title,
-  includeDemoManager: true
+  includeDemoManager: true,
+  includeListCSS: true,
+  includeItemRenderer: true,
+  includeStatusCSS: true
 }) %>
 <body>
   <header class="main-header">
     <h1>
-      <a class="link" href="/" id="main-title">
-        <svg width="200" height="40" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" aria-label="The Blacklist Logo">
-          <!-- Background rectangle -->
-          <rect width="200" height="40" fill="#1a1a1a" stroke="#FE0000" stroke-width="2"/>
-          
-          <!-- Main text "THE BLACKLIST" -->
-          <text x="100" y="26" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FE0000" text-transform="uppercase" letter-spacing="2px">
-            THE BLACKLIST
-          </text>
-          
-          <!-- Decorative line -->
-          <line x1="20" y1="32" x2="180" y2="32" stroke="#FE0000" stroke-width="1"/>
-          
-          <!-- Fallback text (hidden by default) -->
-          <text x="100" y="26" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="#FE0000" style="display: none;">
-            THE BLACKLIST
-          </text>
-        </svg>
-        <!-- Fallback text for browsers that don't support SVG -->
-        <span class="logo-fallback">THE BLACKLIST</span>
-      </a>
+      <a class="link" href="/" id="main-title">THE BLACKLIST</a>
     </h1>
     <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
   </header>
@@ -59,249 +42,27 @@
       <div class="legend-items" id="statusItems" 
            hx-get="/status/<%= status || 'unknown' %>" 
            hx-trigger="load" 
-           hx-indicator="#loading-spinner">
-             <div id="loading-spinner" class="htmx-indicator" style="display: none;">Loading...</div>
+           hx-indicator="#statusSpinner"
+           hx-swap="none"
+           style="position: relative; min-height: 200px;">
+        
+        <!-- Status Loading Spinner -->
+        <%- include('../partials/reusable-spinner', { 
+          id: 'statusSpinner', 
+          text: 'Loading status items...',
+          size: 'medium',
+          color: 'red'
+        }) %>
+        
+        <!-- Status items will be loaded here -->
       </div>
     </div>
   </div>
 
-  <script>
-    // Status page demo data handlers
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize demo manager
-      if (typeof initDemoManager === 'function') {
-        initDemoManager();
-      }
-      
-      // Listen for demo mode changes
-      window.addEventListener('demoModeChanged', function(event) {
-          if (event.detail.demoMode && window.demoManager) {
-            loadStatusDemoData();
-          }
-        });
-
-      // Listen for demo button show event
-      window.addEventListener('showDemoButton', function(event) {
-        if (event.detail.show) {
-          showQuotaExceededMessage();
-        }
-      });
-
-        // Check if demo mode is already enabled and data not already loaded
-        if (window.demoManager && window.demoManager.isDemoMode() && !window.demoManager.hasCurrentPageDemoData()) {
-          loadStatusDemoData();
-        }
-    });
-
-    function loadStatusDemoData() {
-      const currentStatus = '<%= status || "unknown" %>';
-      const pageId = `status-${currentStatus}`;
-      
-      // Use dummy data directly instead of making network requests
-      console.log(`Demo Manager: Loading dummy data for status ${currentStatus}`);
-      
-      if (window.demoManager) {
-        // Get dummy data from the server's dummy data endpoint
-        fetch('/dummy-data/v1')
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-          })
-          .then(allItems => {
-            // Filter dummy data by status
-            const filteredItems = allItems.filter(item => 
-              item.status && item.status.toLowerCase() === currentStatus.toLowerCase()
-            );
-            
-            console.log(`Demo Manager: Loaded dummy data for ${currentStatus}:`, filteredItems.length, 'items');
-            
-            // Render the dummy data
-            if (window.renderStatusData) {
-              window.renderStatusData(filteredItems, 'statusItems');
-            }
-            
-            // Enable demo mode and show banner when demo data is successfully loaded
-            if (window.demoManager && !window.demoManager.isDemoMode()) {
-              console.log('Status page: Enabling demo mode after successful demo data load');
-              window.demoManager.enableDemoMode();
-            }
-          })
-          .catch(error => {
-            console.error('Demo Manager: Failed to load dummy data:', error);
-            // Fallback to empty state
-            const statusItems = document.getElementById('statusItems');
-            if (statusItems) {
-              statusItems.innerHTML = '<div class="no-data">Demo data not available</div>';
-            }
-          });
-      }
-    }
-
-    // Make render function globally accessible
-    window.renderStatusData = function(data, containerId) {
-      const renderStartTime = performance.now();
-      
-      // Handle both array and object formats
-      const items = Array.isArray(data) ? data : (data.items || []);
-      console.log(`Render Status Data: Starting render for ${containerId} with ${items.length} items`);
-      console.log(`Render Status Data: Data format - isArray: ${Array.isArray(data)}, hasItems: ${!!data.items}, itemsLength: ${items.length}`);
-      
-      const container = document.getElementById(containerId);
-      if (!container) {
-        console.log(`Render Status Data: Container ${containerId} not found`);
-        return;
-      }
-      
-      if (!items || items.length === 0) {
-        console.log(`Render Status Data: No items to render for ${containerId}`);
-        // Show empty state instead of rendering nothing
-        container.innerHTML = window.QuotaMessageHelper.generateNoData();
-        return;
-      }
-      
-      // Validate that items have required properties
-      const validItems = items.filter(item => item && typeof item === 'object' && item.name);
-      if (validItems.length === 0) {
-        console.log(`Render Status Data: No valid items found for ${containerId}`);
-        container.innerHTML = window.QuotaMessageHelper.generateInvalidData();
-        return;
-      }
-      
-      console.log(`Render Status Data: Rendering ${validItems.length} valid items out of ${items.length} total items`);
-
-      // Use document fragment for better performance
-      const fragment = document.createDocumentFragment();
-      
-      validItems.forEach((item, index) => {
-        // Validate item data before rendering
-        if (!item || typeof item !== 'object') {
-          console.warn(`Render Status Data: Invalid item at index ${index}:`, item);
-          return;
-        }
-        
-        // Generate HTML to match live data structure
-        const status = item.status || 'unknown';
-        const name = item.name || 'Unknown';
-        const v1 = item.v1 || 0;
-        
-        const statusClass = status === 'redacted' ? 'legend-item redacted' : `legend-item ${status}`;
-        
-        let itemHTML;
-        if (status === 'redacted') {
-          itemHTML = `<div class="${statusClass}"><span class="guide">#${v1}.</span><span class="item-redacted"></span></div>`;
-        } else {
-          itemHTML = `<div class="${statusClass}"><span class="guide">#${v1}.</span><div class="item-content"><div class="item-name">${name}</div></div></div>`;
-        }
-        
-        // Create a temporary div to parse the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = itemHTML;
-        fragment.appendChild(tempDiv.firstElementChild);
-      });
-      
-      // Clear container and append fragment
-      container.innerHTML = '';
-      container.appendChild(fragment);
-      
-      // Hide loading spinner immediately
-      const loadingSpinner = document.getElementById('loading-spinner');
-      if (loadingSpinner) {
-        loadingSpinner.style.display = 'none';
-      }
-      
-      // Force immediate visibility
-      container.style.display = 'block';
-      container.style.visibility = 'visible';
-      
-      const renderEndTime = performance.now();
-      console.log(`Render Status Data: Completed render for ${containerId} in ${(renderEndTime - renderStartTime).toFixed(2)}ms`);
-      
-      // Verify content is visible
-      setTimeout(() => {
-        const hasContent = container.children.length > 0;
-        const isVisible = container.style.display !== 'none' && container.style.visibility !== 'hidden';
-        console.log(`Render Status Data: Content verification - hasContent: ${hasContent}, isVisible: ${isVisible}, children: ${container.children.length}`);
-      }, 100);
-    }
-    
-    // Function to show quota exceeded message
-    function showQuotaExceededMessage() {
-      const statusItems = document.getElementById('statusItems');
-      const loadingSpinner = document.getElementById('loading-spinner');
-      const demoButtonContainer = document.getElementById('demo-button-container');
-      
-      // Hide loading spinner
-      if (loadingSpinner) {
-        loadingSpinner.style.display = 'none';
-      }
-      
-      // Show demo button
-      if (demoButtonContainer) {
-        demoButtonContainer.style.display = 'block';
-      }
-      
-      if (statusItems) {
-        statusItems.innerHTML = window.QuotaMessageHelper.generateGeneral();
-      }
-    }
-    
-    // Manual fallback function (called by button click)
-    function loadDummyDataManually() {
-      console.log('Manual demo mode activation');
-      
-      // Show loading state on button
-      const button = document.querySelector('#demo-button-container button');
-      if (button) {
-        window.demoManager.setButtonLoading(button, true);
-      }
-      
-      // Enable demo mode
-      window.demoManager.enableDemoMode();
-      
-      // Hide demo button after a short delay
-      setTimeout(() => {
-        const demoButtonContainer = document.getElementById('demo-button-container');
-        if (demoButtonContainer) {
-          demoButtonContainer.style.display = 'none';
-        }
-      }, 1000);
-    }
-
-    // Update spinner text using StringSchema when available
-    document.addEventListener('DOMContentLoaded', function() {
-      // Use requestAnimationFrame for smoother updates
-      requestAnimationFrame(function() {
-        if (window.StringSchema) {
-          // Update main title
-          const mainTitle = document.getElementById('main-title');
-          if (mainTitle) {
-            const newTitle = window.StringSchema.getPageTitle('status');
-            if (newTitle !== mainTitle.textContent) {
-              mainTitle.textContent = newTitle;
-            }
-          }
-
-          const spinner = document.getElementById('loading-spinner');
-          if (spinner) {
-            spinner.textContent = window.StringSchema.getLoadingMessage('items');
-          }
-        }
-      });
-    });
-
-    // Listen for successful HTMX requests to detect live data loading
-    document.addEventListener('htmx:afterRequest', function(event) {
-      // Check if this is a successful status data request
-      if (event.detail.successful && event.detail.pathInfo.requestPath.includes('/status/')) {
-        const status = event.detail.pathInfo.requestPath.split('/status/')[1];
-        if (status && window.demoManager) {
-          console.log(`Status page: Live data loaded for ${status}`);
-          window.demoManager.onLiveDataLoaded(`status-${status}`, 'statusItems');
-        }
-      }
-    });
-  </script>
+  <!-- Enhanced Common Scripts -->
+  <%- include('../partials/enhanced-common-scripts') %>
+  
+  <!-- Status-Specific Scripts -->
+  <%- include('../partials/status-specific-scripts') %>
 </body>
 </html>
