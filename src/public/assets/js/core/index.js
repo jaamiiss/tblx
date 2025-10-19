@@ -42,8 +42,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Check if we're on the v2 page
                 const isV2Page = window.location.pathname.includes('/v2');
                 
+                // Handle column-based data structure from API
+                let flatData;
+                if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
+                    // Data is in column format [[col1], [col2], [col3], [col4]]
+                    flatData = data.flat();
+                } else {
+                    // Data is already flat
+                    flatData = data;
+                }
+                
                 // Sort data by appropriate field
-                const sortedData = data.sort((a, b) => {
+                const sortedData = flatData.sort((a, b) => {
                     if (isV2Page) {
                         return (a.v2 || 0) - (b.v2 || 0);
                     } else {
@@ -51,60 +61,62 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
                 
-                // Function to get screen size and determine column distribution
-                function getColumnDistribution() {
-                    const width = window.innerWidth;
-                    
-                    if (width >= 1600) {
-                        // Large desktop: 4 columns
-                        return {
-                            columns: 4,
-                            itemsPerColumn: Math.ceil(sortedData.length / 4)
-                        };
-                    } else if (width >= 900) {
-                        // Desktop/Tablet: 3 columns
-                        return {
-                            columns: 3,
-                            itemsPerColumn: Math.ceil(sortedData.length / 3)
-                        };
-                    } else if (width >= 600) {
-                        // Mobile: 2 columns
-                        return {
-                            columns: 2,
-                            itemsPerColumn: Math.ceil(sortedData.length / 2)
-                        };
-                    } else {
-                        // Small mobile: 1 column
-                        return {
-                            columns: 1,
-                            itemsPerColumn: sortedData.length
-                        };
-                    }
+                // Check if ItemRenderer is available and log status
+                if (window.ItemRenderer && window.ItemRenderer.renderItem) {
+                    indexLogger.debug('ItemRenderer is available, using unified renderer');
+                } else {
+                    indexLogger.warn('ItemRenderer not available, using fallback rendering');
                 }
                 
-                const distribution = getColumnDistribution();
-                const columns = Array(distribution.columns).fill().map(() => []);
-                
-                // Distribute items evenly across columns
-                sortedData.forEach((item, index) => {
-                    const columnIndex = Math.floor(index / distribution.itemsPerColumn);
-                    if (columnIndex < distribution.columns) {
-                        columns[columnIndex].push(item);
-                    } else {
-                        // Put remaining items in the last column
-                        columns[distribution.columns - 1].push(item);
+                // Use the same range-based distribution as the layout
+                const columnRanges = [
+                    { min: 0, max: 50, label: '0-50' },
+                    { min: 51, max: 100, label: '51-100' },
+                    { min: 101, max: 150, label: '101-150' },
+                    { min: 151, max: 200, label: '151-200' }
+                ];
+
+                const columns = columnRanges.map(range => ({
+                    range: range,
+                    items: []
+                }));
+
+                // Distribute items into appropriate columns based on ranges
+                sortedData.forEach((item) => {
+                    const value = isV2Page ? (item.v2 || 0) : (item.v1 || 0);
+                    
+                    for (let i = 0; i < columns.length; i++) {
+                        const column = columns[i];
+                        if (value >= column.range.min && value <= column.range.max) {
+                            column.items.push(item);
+                            break;
+                        }
                     }
                 });
-                
+
                 // Generate HTML for each column using unified ItemRenderer
-                const columnHTML = columns.map(columnData => {
-                    const itemsHTML = columnData.map((item) => {
-                        return window.ItemRenderer.renderItem(item, {
-                            showV1: !isV2Page,
-                            showV2: isV2Page,
-                            useV2ForNumber: isV2Page,
-                            includeLegendWrapper: true
-                        });
+                const columnHTML = columns.map(column => {
+                    const itemsHTML = column.items.map((item) => {
+                        // Check if ItemRenderer is available
+                        if (window.ItemRenderer && window.ItemRenderer.renderItem) {
+                            return window.ItemRenderer.renderItem(item, {
+                                showV1: !isV2Page,
+                                showV2: isV2Page,
+                                useV2ForNumber: isV2Page,
+                                includeLegendWrapper: true
+                            });
+                        } else {
+                            // Fallback rendering if ItemRenderer is not available
+                            const value = isV2Page ? (item.v2 || 0) : (item.v1 || 0);
+                            const status = item.status || 'unknown';
+                            const name = item.name || 'Unknown';
+                            
+                            if (status === 'redacted') {
+                                return `<div class="${status}"><div class="list-item"><span class="guide">#${value}.</span><span class="item-redacted"></span></div></div>`;
+                            } else {
+                                return `<div class="${status}"><div class="list-item"><span class="guide">#${value}.</span><span><span class="name">${name}</span><span class="dash">&ndash;</span><span class="status ${status}">${status}</span></span></div></div>`;
+                            }
+                        }
                     }).join('');
                     return `<div class="column">${itemsHTML}</div>`;
                 }).join('');
@@ -135,4 +147,57 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }, 250);
     });
+
+    // Global function for demo manager to render list data
+    window.renderListData = function(data, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            indexLogger.error(`Container ${containerId} not found`);
+            return;
+        }
+
+        try {
+            // Handle column-based data structure
+            let flatData;
+            if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
+                flatData = data.flat();
+            } else {
+                flatData = data;
+            }
+
+            // Sort data by appropriate field
+            const isV2Page = window.location.pathname.includes('/v2');
+            const sortedData = flatData.sort((a, b) => {
+                if (isV2Page) {
+                    return (a.v2 || 0) - (b.v2 || 0);
+                } else {
+                    return (a.v1 || 0) - (b.v1 || 0);
+                }
+            });
+
+            // Use ItemRenderer if available
+            if (window.ItemRenderer && window.ItemRenderer.renderItem) {
+                indexLogger.info('Using ItemRenderer for demo data');
+                const html = sortedData.map(item => window.ItemRenderer.renderItem(item)).join('');
+                container.innerHTML = html;
+            } else {
+                indexLogger.warn('ItemRenderer not available, using basic rendering');
+                const html = sortedData.map(item => 
+                    `<div class="list-item ${item.status || 'unknown'}">
+                        <div class="item-header">
+                            <span class="item-name">${item.name || 'Unknown'}</span>
+                            <span class="item-dash">-</span>
+                            <span class="item-status">#${isV2Page ? (item.v2 || 0) : (item.v1 || 0)}</span>
+                        </div>
+                    </div>`
+                ).join('');
+                container.innerHTML = html;
+            }
+
+            indexLogger.info(`Rendered ${sortedData.length} demo items for ${containerId}`);
+        } catch (error) {
+            indexLogger.error('Error rendering demo list data:', error);
+            container.innerHTML = '<div class="error-message">Error loading demo data</div>';
+        }
+    };
 });

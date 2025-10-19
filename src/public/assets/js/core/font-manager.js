@@ -5,11 +5,12 @@
 class FontManager {
   constructor() {
     this.fontUrls = {
-      // Disabled CDN font loading to prevent errors
-      // 'OCR A Std Regular.ttf': 'https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/OCR%20A%20Std%20Regular.ttf',
-      // 'Blacklisted.ttf': 'https://ik.imagekit.io/ivw8jbdbt/TBLX/fonts/Blacklisted.ttf'
+      // Local fonts to check and load
+      'Blacklisted.woff2': null, // Local only, no CDN fallback
+      'Blacklisted.woff': null,  // Local only, no CDN fallback
+      'OCR A Std Regular.ttf': null // Local only, no CDN fallback
     };
-    this.fontsPath = '/assets/fonts/';
+    this.fontsPath = '/shared/assets/fonts/';
     
     // Create module logger
     this.logger = window.logManager ? window.logManager.createModuleLogger('FontManager') : {
@@ -59,8 +60,12 @@ class FontManager {
         const isAvailable = await this.testFontUrl(localUrl);
         
         if (!isAvailable) {
-          this.logger.warn(`[FontManager] Local font ${filename} not available, downloading from CDN...`);
-          await this.downloadFont(filename, cdnUrl);
+          if (cdnUrl) {
+            this.logger.warn(`[FontManager] Local font ${filename} not available, downloading from CDN...`);
+            await this.downloadFont(filename, cdnUrl);
+          } else {
+            this.logger.warn(`[FontManager] Local font ${filename} not available (no CDN fallback)`);
+          }
         } else {
           this.logger.info(`[FontManager] Local font ${filename} is available`);
         }
@@ -68,6 +73,9 @@ class FontManager {
         this.logger.error(`[FontManager] Error checking font ${filename}:`, error);
       }
     }
+    
+    // Force font loading by creating hidden elements
+    this.forceFontLoading();
   }
 
   async testFontUrl(url) {
@@ -190,6 +198,61 @@ class FontManager {
   async refreshFonts() {
     this.logger.info('[FontManager] Refreshing fonts...');
     await this.checkFonts();
+  }
+
+  // Force font loading by creating hidden elements
+  forceFontLoading() {
+    this.logger.info('[FontManager] Forcing font loading...');
+    
+    // Create hidden elements with different font families to trigger loading
+    const fontFamilies = ['Blacklisted', 'TBL-2'];
+    const testText = 'THE BLACKLIST';
+    
+    fontFamilies.forEach(fontFamily => {
+      const element = document.createElement('div');
+      element.style.cssText = `
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+        font-family: '${fontFamily}', Arial, sans-serif;
+        font-size: 16px;
+        visibility: hidden;
+      `;
+      element.textContent = testText;
+      document.body.appendChild(element);
+      
+      // Remove after a short delay
+      setTimeout(() => {
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      }, 1000);
+    });
+    
+    // Add font loading classes to body
+    document.body.classList.add('fonts-loading');
+    
+    // Check if fonts are actually loaded after a delay
+    setTimeout(() => {
+      this.checkFontLoadingStatus();
+    }, 2000);
+  }
+  
+  checkFontLoadingStatus() {
+    const blacklistedLoaded = document.fonts.check('16px Blacklisted');
+    const tbl2Loaded = document.fonts.check('16px TBL-2');
+    
+    this.logger.info(`[FontManager] Font loading status - Blacklisted: ${blacklistedLoaded}, TBL-2: ${tbl2Loaded}`);
+    
+    if (blacklistedLoaded || tbl2Loaded) {
+      document.body.classList.remove('fonts-loading');
+      document.body.classList.add('fonts-loaded');
+      this.logger.info('[FontManager] Fonts loaded successfully');
+    } else {
+      document.body.classList.remove('fonts-loading');
+      document.body.classList.add('fonts-fallback');
+      this.logger.warn('[FontManager] Using fallback fonts');
+    }
   }
 
   // Method to get font loading status

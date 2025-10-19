@@ -11,11 +11,24 @@
   <% if (typeof preloadFonts !== 'undefined' && preloadFonts) { %>
   <% } %>
   
+  <!-- Preload critical fonts -->
+  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff" as="font" type="font/woff" crossorigin>
+  
   <!-- DNS prefetch for external resources -->
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
   
   <link rel="stylesheet" href="/assets/css/style.css?v=<%= Date.now() %>">
+  <% if (typeof includeListCSS !== 'undefined' && includeListCSS) { %>
+  <link rel="stylesheet" href="/assets/css/pages/list-pages.css?v=<%= Date.now() %>">
+  <% } %>
+  <% if (typeof includeStatusCSS !== 'undefined' && includeStatusCSS) { %>
+  <link rel="stylesheet" href="/assets/css/pages/status-pages.css?v=<%= Date.now() %>">
+  <% } %>
+  <% if (typeof includeChartsCSS !== 'undefined' && includeChartsCSS) { %>
+  <link rel="stylesheet" href="/assets/css/pages/charts-pages.css?v=<%= Date.now() %>">
+  <% } %>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
   <!-- Core Scripts - Always Loaded -->
@@ -23,7 +36,7 @@
   
   <!-- Conditional Scripts -->
   <% if (typeof includeChartJS !== 'undefined' && includeChartJS) { %>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js"></script>
   <% } %>
   
   <% if (typeof includeGSAP !== 'undefined' && includeGSAP) { %>
@@ -54,14 +67,13 @@
   
   <% if (typeof includeDemoManager !== 'undefined' && includeDemoManager) { %>
   <script src="/assets/js/managers/log-manager.js?v=<%= Date.now() %>"></script>
-  <script src="/assets/js/managers/spinner-manager.js?v=<%= Date.now() %>"></script>
   <script src="/assets/js/managers/htmx-manager.js?v=<%= Date.now() %>"></script>
   <script src="/assets/js/managers/demo-manager.js?v=<%= Date.now() %>"></script>
   <script src="/assets/js/utils/quota-message-helper.js?v=<%= Date.now() %>"></script>
   <% } %>
   
   <% if (typeof includeItemRenderer !== 'undefined' && includeItemRenderer) { %>
-  <script src="/shared/assets/js/item-renderer.js"></script>
+  <script src="/shared/assets/js/item-renderer.js?v=<%= Date.now() %>"></script>
   <% } %>
   
   <!-- CDN Fallback Script -->
@@ -69,7 +81,7 @@
     // CDN Fallback System
     window.cdnFallbacks = {
       htmx: 'https://unpkg.com/htmx.org@2.0.7/dist/htmx.js',
-      chartjs: 'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.js',
+      chartjs: 'https://unpkg.com/chart.js@4.3.0/dist/chart.umd.js',
       gsap: 'https://unpkg.com/gsap@3.12.2/dist/gsap.min.js',
       scrollTrigger: 'https://unpkg.com/gsap@3.12.2/dist/ScrollTrigger.min.js'
     };

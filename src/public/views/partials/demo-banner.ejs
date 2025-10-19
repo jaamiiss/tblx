@@ -20,9 +20,32 @@
 </div>
 
 <script>
-// Update debug button text based on current state
+// Demo Banner Management
 document.addEventListener('DOMContentLoaded', function() {
+  const demoBanner = document.getElementById('demo-data-banner');
   const debugBtn = document.getElementById('debug-toggle-btn');
+  
+  // Function to show demo banner
+  window.showDemoBanner = function(context = 'Data using demo data') {
+    if (demoBanner) {
+      const contextSpan = document.getElementById('demo-banner-context');
+      if (contextSpan) {
+        contextSpan.textContent = context;
+      }
+      demoBanner.style.display = 'block';
+      document.body.classList.add('demo-banner-visible');
+    }
+  };
+  
+  // Function to hide demo banner
+  window.hideDemoBanner = function() {
+    if (demoBanner) {
+      demoBanner.style.display = 'none';
+      document.body.classList.remove('demo-banner-visible');
+    }
+  };
+  
+  // Update debug button text based on current state
   if (debugBtn && window.logManager) {
     const updateDebugButton = () => {
       debugBtn.textContent = window.logManager.isDebugMode() ? 'Disable Debug' : 'Enable Debug';

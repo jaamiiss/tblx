@@ -60,11 +60,14 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`The Blacklist server running on port ${PORT}`);
-  console.log(`Public views: ${path.join(__dirname, 'src/public/views')}`);
-  console.log(`Admin views: ${path.join(__dirname, 'src/admin/views')}`);
-});
+// Only start server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`The Blacklist server running on port ${PORT}`);
+    console.log(`Public views: ${path.join(__dirname, 'src/public/views')}`);
+    console.log(`Admin views: ${path.join(__dirname, 'src/admin/views')}`);
+  });
+}
 
 module.exports = app;
 

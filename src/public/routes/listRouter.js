@@ -639,6 +639,7 @@ router.get('/version1', async (req, res) => {
     warmRelatedCaches('version1');
     
     res.json(data);
+    
     logger.debug(`Returned ${data.length} items for version1`);
   } catch (error) {
     console.error('Error in version1 route:', error);
@@ -658,6 +659,7 @@ router.get('/version2', async (req, res) => {
     warmRelatedCaches('version2');
     
     res.json(data);
+    
     logger.debug(`Returned ${data.length} items for version2`);
   } catch (error) {
     console.error('Error in version2 route:', error);
@@ -712,36 +714,16 @@ router.get('/stats/cards', async (req, res) => {
       v1Percentages[status] = v1Total > 0 ? ((v1Counts[status] / v1Total) * 100).toFixed(1) : '0.0';
     });
     
-    // Return HTML for status cards grid (showing V1-specific data)
-    let statusCardsHtml = '';
-    statuses.forEach(status => {
-      statusCardsHtml += `
-        <div class="stat-card ${status}" onclick="window.location.href='/list/${status}'">
-          <div class="stat-number">${v1Counts[status] || 0}</div>
-          <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
-          <div class="stat-percentage">${v1Percentages[status] || '0.0'}%</div>
-        </div>
-      `;
-    });
+    // Return JSON data for hybrid HTMX approach
+    const statsData = {
+      counts: v1Counts,
+      percentages: v1Percentages,
+      v1Total: v1Total,
+      v1Active: v1Active,
+      v1Deceased: v1Deceased
+    };
     
-    const html = `
-      <div class="stats-cards-container">
-        <div class="status-cards-grid">
-          ${statusCardsHtml}
-        </div>
-        
-        <!-- Total card separated and centered -->
-        <div class="total-card-container">
-          <div class="stat-card total">
-            <div class="stat-number">${v1Total}</div>
-            <div class="stat-label">Total</div>
-            <div class="stat-percentage">100%</div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    res.send(html);
+    res.json(statsData);
     logger.debug(`✅ LIVE DATA: Returned V1 status cards HTML with ${v1Total} V1 items (0-200 range)`);
     console.log(`Stats Cards: ✅ Using LIVE data - V1 Total: ${v1Total}, V1 Active: ${v1Active}, V1 Deceased: ${v1Deceased}`);
   } catch (error) {
@@ -784,53 +766,27 @@ router.get('/stats/cards', async (req, res) => {
       
       const lastUpdated = new Date().toLocaleString();
       
-      // Return HTML for status cards grid (showing V1-specific dummy data)
-      let statusCardsHtml = '';
-      statuses.forEach(status => {
-        statusCardsHtml += `
-          <div class="stat-card ${status}" onclick="window.location.href='/list/${status}'">
-            <div class="stat-number">${dummyV1Counts[status] || 0}</div>
-            <div class="stat-label">${status.charAt(0).toUpperCase() + status.slice(1)}</div>
-            <div class="stat-percentage">${dummyV1Percentages[status] || '0.0'}%</div>
-          </div>
-        `;
-      });
+      // Return JSON data for client-side rendering (dummy data)
+      const dummyStatsData = {
+        counts: dummyV1Counts,
+        percentages: dummyV1Percentages,
+        v1Total: dummyV1Total,
+        v1Active: dummyV1Active,
+        v1Deceased: dummyV1Deceased
+      };
       
-      const dummyHtml = `
-        <div class="stats-cards-container">
-          <div class="status-cards-grid">
-            ${statusCardsHtml}
-          </div>
-          
-          <!-- Total card separated and centered -->
-          <div class="total-card-container">
-            <div class="stat-card total">
-              <div class="stat-number">${dummyV1Total}</div>
-              <div class="stat-label">Total</div>
-              <div class="stat-percentage">100%</div>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      res.send(dummyHtml);
+      res.json(dummyStatsData);
       console.log(`Stats Cards: 🔄 Using DUMMY data - V1 Total: ${dummyV1Total}, V1 Active: ${dummyV1Active}, V1 Deceased: ${dummyV1Deceased}`);
     } catch (dummyError) {
       console.error('Error loading dummy data for stats cards:', dummyError);
       
-      // Return error HTML for HTMX as last resort
-      const errorHtml = `
-        <div class="htmx-error">
-          <div class="error-icon">⚠️</div>
-          <div class="error-title">Update Failed</div>
-          <div class="error-message">Unable to refresh statistics. Please try again.</div>
-          <button class="retry-button" onclick="htmx.trigger('#statsCards', 'htmx:trigger')">
-            Retry
-          </button>
-        </div>
-      `;
-      
-      res.status(500).send(errorHtml);
+      // Return error JSON as last resort
+      res.status(500).json({ 
+        error: 'Unable to load statistics data',
+        counts: {},
+        percentages: {},
+        v1Total: 0
+      });
     }
   }
 });
@@ -924,7 +880,8 @@ router.get('/stats/chart/scatter', async (req, res) => {
       v1: item.v1 || 0,
       v2: item.v2 || 0,
       name: item.name || 'Unknown',
-      status: item.status || 'unknown'
+      status: item.status || 'unknown',
+      category: item.category || 'Unknown'
     })).filter(item => item.v1 !== undefined && item.v2 !== undefined);
 
     const data = { items };
@@ -1083,49 +1040,13 @@ router.get('/status/:status', async (req, res) => {
       data = await getOptimizedData('status', status);
     }
 
-    // Return HTML fragment for HTMX instead of JSON
-    if (req.headers['hx-request']) {
-      let html = '';
-      if (data && data.length > 0) {
-        data.forEach((item, index) => {
-          // Use the same ItemRenderer logic as the client-side
-          const status = item.status || 'unknown';
-          const name = item.name || 'Unknown';
-          const v1 = item.v1 || 0;
-          const v2 = item.v2 || null;
-          
-          // Apply status-specific styling
-          const statusClass = status === 'redacted' ? 'legend-item redacted' : `legend-item ${status}`;
-          
-          html += `<div class="${statusClass}">`;
-          html += `<span class="guide">#${v1}.</span>`;
-          
-          if (status === 'redacted') {
-            html += '<span class="item-redacted"></span>';
-          } else {
-            html += '<div class="item-content">';
-            html += `<div class="item-name">${name}</div>`;
-            html += '</div>';
-          }
-          
-          html += '</div>';
-        });
-      } else {
-        html = '<p style="color: #666; font-style: italic;">No items found</p>';
-      }
-      res.send(html);
-    } else {
-      res.json(data);
-    }
+    // Always return JSON for consistency - client-side rendering handles HTML
+    res.json(data);
     
     logger.debug(`Returned ${data.length} items for status page: ${status}`);
   } catch (error) {
     console.error('Error in status/:status route:', error);
-    if (req.headers['hx-request']) {
-      res.status(500).send('<p style="color: #FE0000;">Error loading data</p>');
-    } else {
-      res.status(500).json({ error: 'Something went wrong' });
-    }
+    res.status(500).json({ error: 'Something went wrong' });
   }
 });
 
@@ -1312,7 +1233,8 @@ router.get('/dummy-data/:type', (req, res) => {
                     v1: item.v1 || 0,
                     v2: item.v2 || 0,
                     name: item.name || 'Unknown',
-                    status: item.status || 'unknown'
+                    status: item.status || 'unknown',
+                    category: item.category || 'Unknown'
                   });
                 }
               });

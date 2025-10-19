@@ -6,6 +6,11 @@
   <title>The Blacklist</title>
   <meta name="description" content="HTMX, Express, & Firestore">            
   <link rel="icon" href="/assets/favicon.ico">
+  
+  <!-- Preload critical fonts -->
+  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff" as="font" type="font/woff" crossorigin>
+  
   <link rel="stylesheet" href="/assets/css/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
@@ -15,6 +20,7 @@
   <!-- Essential Scripts -->
   <script src="/assets/js/core/header-optimizer.js"></script>
   <script src="/shared/assets/js/string-schema.js"></script>
+  <script src="/assets/js/core/font-manager.js"></script>
   
   <!-- Home Page Specific Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-16esztaSRplJROstbIIdwX3N97V1+pZvV33ABoG1H2OyTttBxEGkTsoIVsiP1iaTtM8b3+hu2kB6pQ4Clr5yug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -78,14 +84,7 @@
     </div>
     <div class="overlay">
       <h1 class="title" data-text="The Blacklist">
-        <a class="link" href="/list" id="main-title">
-          <svg width="200" height="40" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg">
-            <rect width="200" height="40" fill="#1a1a1a" stroke="#FE0000" stroke-width="2"/>
-            <text x="100" y="25" text-anchor="middle" fill="#FE0000" font-family="TBL, Arial Black, Arial, Helvetica, sans-serif" font-size="14" font-weight="bold">THE BLACKLIST</text>
-            <line x1="20" y1="30" x2="180" y2="30" stroke="#FE0000" stroke-width="1"/>
-          </svg>
-          <span class="logo-fallback">The Blacklist</span>
-        </a>
+        <a class="link" href="/list" id="main-title">THE BLACKLIST</a>
       </h1>
     </div>
   </div>
