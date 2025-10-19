@@ -4,4 +4,5 @@ node_modules/
 FUTURE_ENHANCEMENTS.md
 
 # Admin-related files (restructured)
-src/admin/
+# Note: adminRouter.js is needed for deployment, so we can't ignore the entire admin directory
+# src/admin/

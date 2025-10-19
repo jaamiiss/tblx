@@ -1,0 +1,62 @@
+<%- include('partials/admin-head', { title: pageTitle || 'The Blacklist' }) %>
+<link rel="stylesheet" href="/admin/assets/css/admin.css">
+<!-- Admin Header Optimizer - Load first for immediate optimization -->
+<script src="/admin/assets/js/admin-header-optimizer.js"></script>
+<script src="/admin/assets/js/admin-string-schema.js"></script>
+<!-- Chart.js for dashboard charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<!-- Shared Chart Utilities -->
+<script src="/shared/assets/js/chart-utils.js"></script>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="admin-header-content">
+      <h1><a class="admin-link" href="/admin" id="admin-title">Criminal List</a></h1>
+      <div class="admin-nav">
+        <a href="/admin" class="nav-link <%= activeTab === 'dashboard' ? 'active' : '' %>">Dashboard</a>
+        <a href="/admin/items" class="nav-link <%= activeTab === 'items' ? 'active' : '' %>">Items</a>
+        <a href="/" class="nav-link public-link">View Site</a>
+        <% if (typeof user !== 'undefined' && user) { %>
+          <div class="user-info">
+            <span class="username">Welcome, <%= user.username %></span>
+            <a href="/admin/logout" class="nav-link logout-link">Logout</a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-container">
+      <%- body %>
+    </div>
+  </main>
+
+  <footer class="admin-footer">
+    <div class="admin-footer-content">
+      <p>&copy; 2025 The Blacklist Admin Panel</p>
+    </div>
+  </footer>
+
+  <!-- Admin Scripts -->
+  <script src="/admin/assets/js/admin-manager.js"></script>
+  <script src="/admin/assets/js/admin-dashboard-charts.js"></script>
+  
+  <script>
+    // Initialize admin interface
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.AdminStringSchema) {
+        // Update admin title
+        const adminTitle = document.getElementById('admin-title');
+        if (adminTitle) {
+          adminTitle.textContent = window.AdminStringSchema.getAdminTitle('dashboard');
+        }
+      }
+      
+      // Initialize admin manager
+      if (window.AdminManager) {
+        window.AdminManager.init();
+      }
+    });
+  </script>
+</body>
+</html>
