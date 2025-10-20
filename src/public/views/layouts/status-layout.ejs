@@ -3,7 +3,10 @@
   includeDemoManager: true,
   includeListCSS: true,
   includeItemRenderer: true,
-  includeStatusCSS: true
+  includeStatusCSS: true,
+  includeStructuredData: true,
+  pageUrl: `https://tblx.vercel.app/list/${status || 'unknown'}`,
+  itemCount: 'Loading...'
 }) %>
 <body>
   <header class="main-header">

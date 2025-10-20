@@ -28,6 +28,16 @@
   window.renderListData = function(data, containerId) {
     const renderStartTime = performance.now();
     
+    // Early validation - check if data exists and is valid
+    if (!data) {
+      console.log(`Render List Data: No data provided for ${containerId}`);
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.innerHTML = window.QuotaMessageHelper.generateNoData();
+      }
+      return;
+    }
+    
     // Handle both array and object formats
     const items = Array.isArray(data) ? data : (data.items || []);
     console.log(`Render List Data: Starting render for ${containerId} with ${items.length} items`);
@@ -46,8 +56,26 @@
       return;
     }
     
-    // Validate that items have required properties
-    const validItems = items.filter(item => item && typeof item === 'object' && item.name);
+    // Validate that items have required properties with better error handling
+    let validItems = [];
+    try {
+      validItems = items.filter(item => {
+        if (!item || typeof item !== 'object') {
+          console.log(`Render List Data: Invalid item type:`, typeof item);
+          return false;
+        }
+        if (!item.name || typeof item.name !== 'string') {
+          console.log(`Render List Data: Invalid item name:`, item.name);
+          return false;
+        }
+        return true;
+      });
+    } catch (error) {
+      console.error(`Render List Data: Error during validation:`, error);
+      container.innerHTML = window.QuotaMessageHelper.generateInvalidData();
+      return;
+    }
+    
     if (validItems.length === 0) {
       console.log(`Render List Data: No valid items found for ${containerId}`);
       container.innerHTML = window.QuotaMessageHelper.generateInvalidData();
@@ -55,6 +83,9 @@
     }
     
     console.log(`Render List Data: Rendering ${validItems.length} valid items out of ${items.length} total items`);
+
+    // Update structured data with actual item count
+    updateStructuredData(validItems.length);
 
     // Sort items by V1 number for proper column distribution
     const sortedItems = validItems.sort((a, b) => {
@@ -142,5 +173,29 @@
       console.log(`Render List Data: Content verification - hasContent: ${hasContent}, isVisible: ${isVisible}, children: ${container.children.length}`);
     }, 100);
   };
+
+  // ========================================
+  // STRUCTURED DATA UPDATE FUNCTION
+  // ========================================
+  function updateStructuredData(itemCount) {
+    try {
+      // Find existing JSON-LD script
+      const existingScript = document.querySelector('script[type="application/ld+json"]');
+      if (existingScript) {
+        const structuredData = JSON.parse(existingScript.textContent);
+        
+        // Update the item count
+        if (structuredData.mainEntity && structuredData.mainEntity.numberOfItems) {
+          structuredData.mainEntity.numberOfItems = itemCount;
+        }
+        
+        // Update the script content
+        existingScript.textContent = JSON.stringify(structuredData, null, 2);
+        console.log(`Structured Data: Updated item count to ${itemCount}`);
+      }
+    } catch (error) {
+      console.error('Structured Data: Error updating structured data:', error);
+    }
+  }
 </script>
 
