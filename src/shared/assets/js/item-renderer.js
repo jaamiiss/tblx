@@ -253,12 +253,26 @@ class ItemRenderer {
    * @returns {boolean} Whether item is valid
    */
   static validateItem(item) {
-    return item && 
-           typeof item === 'object' && 
-           item.name && 
-           typeof item.name === 'string' &&
-           item.status && 
-           typeof item.status === 'string';
+    try {
+      // Check if item exists and is an object
+      if (!item || typeof item !== 'object') {
+        return false;
+      }
+      
+      // Check required properties exist and are correct types
+      if (!item.name || typeof item.name !== 'string') {
+        return false;
+      }
+      
+      if (!item.status || typeof item.status !== 'string') {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('ItemRenderer.validateItem: Error validating item:', error);
+      return false;
+    }
   }
 
   /**
@@ -267,11 +281,17 @@ class ItemRenderer {
    * @returns {Array} Array of valid items
    */
   static filterValidItems(items) {
-    if (!Array.isArray(items)) {
+    try {
+      if (!Array.isArray(items)) {
+        console.warn('ItemRenderer.filterValidItems: Input is not an array:', typeof items);
+        return [];
+      }
+
+      return items.filter(item => this.validateItem(item));
+    } catch (error) {
+      console.error('ItemRenderer.filterValidItems: Error filtering items:', error);
       return [];
     }
-
-    return items.filter(item => this.validateItem(item));
   }
 }
 

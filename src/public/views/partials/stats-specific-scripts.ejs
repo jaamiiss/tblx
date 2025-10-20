@@ -186,46 +186,74 @@
     if (statsCards) {
       // Simple dummy data rendering
       statsCards.innerHTML = `
-        <div class="stats-cards-container">
+        <div class="stats-cards-container" itemscope itemtype="https://schema.org/DataCatalog">
           <div class="status-cards-grid">
-            <div class="stat-card deceased" onclick="window.location.href='/list/deceased'">
-              <div class="stat-number">45</div>
-              <div class="stat-label">Deceased</div>
-              <div class="stat-percentage">22.4%</div>
+            <div class="stat-card deceased" 
+                 onclick="window.location.href='/list/deceased'"
+                 itemscope 
+                 itemtype="https://schema.org/Dataset"
+                 itemprop="dataset">
+              <div class="stat-number" itemprop="value">45</div>
+              <div class="stat-label" itemprop="name">Deceased</div>
+              <div class="stat-percentage" itemprop="description">22.4%</div>
             </div>
-            <div class="stat-card active" onclick="window.location.href='/list/active'">
-              <div class="stat-number">32</div>
-              <div class="stat-label">Active</div>
-              <div class="stat-percentage">15.9%</div>
+            <div class="stat-card active" 
+                 onclick="window.location.href='/list/active'"
+                 itemscope 
+                 itemtype="https://schema.org/Dataset"
+                 itemprop="dataset">
+              <div class="stat-number" itemprop="value">32</div>
+              <div class="stat-label" itemprop="name">Active</div>
+              <div class="stat-percentage" itemprop="description">15.9%</div>
             </div>
-            <div class="stat-card incarcerated" onclick="window.location.href='/list/incarcerated'">
-              <div class="stat-number">28</div>
-              <div class="stat-label">Incarcerated</div>
-              <div class="stat-percentage">13.9%</div>
+            <div class="stat-card incarcerated" 
+                 onclick="window.location.href='/list/incarcerated'"
+                 itemscope 
+                 itemtype="https://schema.org/Dataset"
+                 itemprop="dataset">
+              <div class="stat-number" itemprop="value">28</div>
+              <div class="stat-label" itemprop="name">Incarcerated</div>
+              <div class="stat-percentage" itemprop="description">13.9%</div>
             </div>
-            <div class="stat-card redacted" onclick="window.location.href='/list/redacted'">
-              <div class="stat-number">15</div>
-              <div class="stat-label">Redacted</div>
-              <div class="stat-percentage">7.5%</div>
+            <div class="stat-card redacted" 
+                 onclick="window.location.href='/list/redacted'"
+                 itemscope 
+                 itemtype="https://schema.org/Dataset"
+                 itemprop="dataset">
+              <div class="stat-number" itemprop="value">15</div>
+              <div class="stat-label" itemprop="name">Redacted</div>
+              <div class="stat-percentage" itemprop="description">7.5%</div>
             </div>
-            <div class="stat-card unknown" onclick="window.location.href='/list/unknown'">
-              <div class="stat-number">8</div>
-              <div class="stat-label">Unknown</div>
-              <div class="stat-percentage">4.0%</div>
+            <div class="stat-card unknown" 
+                 onclick="window.location.href='/list/unknown'"
+                 itemscope 
+                 itemtype="https://schema.org/Dataset"
+                 itemprop="dataset">
+              <div class="stat-number" itemprop="value">8</div>
+              <div class="stat-label" itemprop="name">Unknown</div>
+              <div class="stat-percentage" itemprop="description">4.0%</div>
             </div>
-            <div class="stat-card captured" onclick="window.location.href='/list/captured'">
-              <div class="stat-number">12</div>
-              <div class="stat-label">Captured</div>
-              <div class="stat-percentage">6.0%</div>
+            <div class="stat-card captured" 
+                 onclick="window.location.href='/list/captured'"
+                 itemscope 
+                 itemtype="https://schema.org/Dataset"
+                 itemprop="dataset">
+              <div class="stat-number" itemprop="value">12</div>
+              <div class="stat-label" itemprop="name">Captured</div>
+              <div class="stat-percentage" itemprop="description">6.0%</div>
             </div>
           </div>
           
           <!-- Total Card -->
           <div class="total-card-container">
-            <div class="stat-card total" onclick="window.location.href='/list'">
-              <div class="stat-number">201</div>
-              <div class="stat-label">Total V1</div>
-              <div class="stat-percentage">100%</div>
+            <div class="stat-card total" 
+                 onclick="window.location.href='/list'"
+                 itemscope 
+                 itemtype="https://schema.org/Dataset"
+                 itemprop="dataset">
+              <div class="stat-number" itemprop="value">201</div>
+              <div class="stat-label" itemprop="name">Total V1</div>
+              <div class="stat-percentage" itemprop="description">100%</div>
             </div>
           </div>
         </div>
@@ -337,46 +365,74 @@
     const { counts, percentages, v1Total } = data;
     
     statsCards.innerHTML = `
-      <div class="stats-cards-container">
+      <div class="stats-cards-container" itemscope itemtype="https://schema.org/DataCatalog">
         <div class="status-cards-grid">
-          <div class="stat-card deceased" onclick="window.location.href='/list/deceased'">
-            <div class="stat-number">${counts.deceased}</div>
-            <div class="stat-label">Deceased</div>
-            <div class="stat-percentage">${percentages.deceased}%</div>
+          <div class="stat-card deceased" 
+               onclick="window.location.href='/list/deceased'"
+               itemscope 
+               itemtype="https://schema.org/Dataset"
+               itemprop="dataset">
+            <div class="stat-number" itemprop="value">${counts.deceased}</div>
+            <div class="stat-label" itemprop="name">Deceased</div>
+            <div class="stat-percentage" itemprop="description">${percentages.deceased}%</div>
           </div>
-          <div class="stat-card active" onclick="window.location.href='/list/active'">
-            <div class="stat-number">${counts.active}</div>
-            <div class="stat-label">Active</div>
-            <div class="stat-percentage">${percentages.active}%</div>
+          <div class="stat-card active" 
+               onclick="window.location.href='/list/active'"
+               itemscope 
+               itemtype="https://schema.org/Dataset"
+               itemprop="dataset">
+            <div class="stat-number" itemprop="value">${counts.active}</div>
+            <div class="stat-label" itemprop="name">Active</div>
+            <div class="stat-percentage" itemprop="description">${percentages.active}%</div>
           </div>
-          <div class="stat-card incarcerated" onclick="window.location.href='/list/incarcerated'">
-            <div class="stat-number">${counts.incarcerated}</div>
-            <div class="stat-label">Incarcerated</div>
-            <div class="stat-percentage">${percentages.incarcerated}%</div>
+          <div class="stat-card incarcerated" 
+               onclick="window.location.href='/list/incarcerated'"
+               itemscope 
+               itemtype="https://schema.org/Dataset"
+               itemprop="dataset">
+            <div class="stat-number" itemprop="value">${counts.incarcerated}</div>
+            <div class="stat-label" itemprop="name">Incarcerated</div>
+            <div class="stat-percentage" itemprop="description">${percentages.incarcerated}%</div>
           </div>
-          <div class="stat-card redacted" onclick="window.location.href='/list/redacted'">
-            <div class="stat-number">${counts.redacted}</div>
-            <div class="stat-label">Redacted</div>
-            <div class="stat-percentage">${percentages.redacted}%</div>
+          <div class="stat-card redacted" 
+               onclick="window.location.href='/list/redacted'"
+               itemscope 
+               itemtype="https://schema.org/Dataset"
+               itemprop="dataset">
+            <div class="stat-number" itemprop="value">${counts.redacted}</div>
+            <div class="stat-label" itemprop="name">Redacted</div>
+            <div class="stat-percentage" itemprop="description">${percentages.redacted}%</div>
           </div>
-          <div class="stat-card unknown" onclick="window.location.href='/list/unknown'">
-            <div class="stat-number">${counts.unknown}</div>
-            <div class="stat-label">Unknown</div>
-            <div class="stat-percentage">${percentages.unknown}%</div>
+          <div class="stat-card unknown" 
+               onclick="window.location.href='/list/unknown'"
+               itemscope 
+               itemtype="https://schema.org/Dataset"
+               itemprop="dataset">
+            <div class="stat-number" itemprop="value">${counts.unknown}</div>
+            <div class="stat-label" itemprop="name">Unknown</div>
+            <div class="stat-percentage" itemprop="description">${percentages.unknown}%</div>
           </div>
-          <div class="stat-card captured" onclick="window.location.href='/list/captured'">
-            <div class="stat-number">${counts.captured}</div>
-            <div class="stat-label">Captured</div>
-            <div class="stat-percentage">${percentages.captured}%</div>
+          <div class="stat-card captured" 
+               onclick="window.location.href='/list/captured'"
+               itemscope 
+               itemtype="https://schema.org/Dataset"
+               itemprop="dataset">
+            <div class="stat-number" itemprop="value">${counts.captured}</div>
+            <div class="stat-label" itemprop="name">Captured</div>
+            <div class="stat-percentage" itemprop="description">${percentages.captured}%</div>
           </div>
         </div>
         
         <!-- Total Card -->
         <div class="total-card-container">
-          <div class="stat-card total" onclick="window.location.href='/list'">
-            <div class="stat-number">${v1Total}</div>
-            <div class="stat-label">Total V1</div>
-            <div class="stat-percentage">100%</div>
+          <div class="stat-card total" 
+               onclick="window.location.href='/list'"
+               itemscope 
+               itemtype="https://schema.org/Dataset"
+               itemprop="dataset">
+            <div class="stat-number" itemprop="value">${v1Total}</div>
+            <div class="stat-label" itemprop="name">Total V1</div>
+            <div class="stat-percentage" itemprop="description">100%</div>
           </div>
         </div>
       </div>

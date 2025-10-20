@@ -1,4 +1,12 @@
-<%- include('../partials/head', { title: title, includeListCSS: true, includeItemRenderer: true, includeDemoManager: true }) %>
+<%- include('../partials/head', { 
+  title: title, 
+  includeListCSS: true, 
+  includeItemRenderer: true, 
+  includeDemoManager: true,
+  includeStructuredData: true,
+  pageUrl: typeof pageUrl !== 'undefined' ? pageUrl : 'https://tblx.vercel.app/list',
+  itemCount: typeof itemCount !== 'undefined' ? itemCount : 'Loading...'
+}) %>
 <body<% if (typeof customStyling !== 'undefined' && customStyling) { %> class="<%= customStyling %>"<% } %>>
   <%- include('../partials/header') %>
   

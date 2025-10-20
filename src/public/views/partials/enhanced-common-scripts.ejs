@@ -302,15 +302,24 @@
       const dataContainer = document.getElementById('dataList') || 
                            document.getElementById('statusItems') || 
                            document.getElementById('statsCards');
+      
+      // Check if container exists and has meaningful content (not just empty divs)
       if (dataContainer && dataContainer.children.length > 0) {
-        const spinner = document.getElementById('spinner') || 
-                       document.getElementById('status-loading-spinner') ||
-                       document.getElementById('stats-loading-spinner');
-        if (spinner) {
-          spinner.classList.add('content-loaded');
-          console.log('Common Scripts: Hidden spinner - content already loaded');
+        // Additional check: ensure content is actually rendered (not just empty containers)
+        const hasContent = Array.from(dataContainer.children).some(child => {
+          return child.textContent.trim().length > 0 || child.querySelector('article');
+        });
+        
+        if (hasContent) {
+          const spinner = document.getElementById('spinner') || 
+                         document.getElementById('status-loading-spinner') ||
+                         document.getElementById('stats-loading-spinner');
+          if (spinner) {
+            spinner.classList.add('content-loaded');
+            console.log('Common Scripts: Hidden spinner - content already loaded');
+          }
+          document.body.classList.remove('loading-active');
         }
-        document.body.classList.remove('loading-active');
       }
     }, window.LayoutConfig.spinnerTimeout);
     

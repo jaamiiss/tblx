@@ -49,7 +49,10 @@ const chartConfig = {
   includeDemoManager: true,
   includeItemRenderer: true,
   includeChartsCSS: true,
-  preloadFonts: false
+  preloadFonts: false,
+  includeStructuredData: true,
+  pageUrl: 'https://tblx.vercel.app/stats',
+  itemCount: 'Loading...'
 }) %>
 <body class="stats-page">
   <%- include('../partials/header') %>
@@ -208,6 +211,11 @@ const chartConfig = {
   </script>
 
   <!-- Shared Chart Utilities -->
+  <% if (process.env.NODE_ENV === 'production') { %>
+  <!-- Production: Use bundled chart JavaScript -->
+  <script src="/assets/build/charts.min.js?v=<%= Date.now() %>"></script>
+  <% } else { %>
+  <!-- Development: Use individual chart JavaScript files -->
   <script src="/shared/assets/js/chart-config.js?v=<%= Date.now() %>"></script>
   <script src="/shared/assets/js/chart-utils.js?v=<%= Date.now() %>"></script>
   <script src="/shared/assets/js/chart-colors.js?v=<%= Date.now() %>"></script>
@@ -221,6 +229,7 @@ const chartConfig = {
   
   <!-- Stats Page Charts Manager -->
   <script src="/assets/js/charts/stats-page-charts-manager.js?v=<%= Date.now() %>"></script>
+  <% } %>
 
   <!-- Enhanced Common Scripts -->
   <%- include('../partials/enhanced-common-scripts') %>

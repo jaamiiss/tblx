@@ -19,6 +19,11 @@
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
   
+  <% if (process.env.NODE_ENV === 'production') { %>
+  <!-- Production: Use bundled CSS -->
+  <link rel="stylesheet" href="/assets/build/bundle.min.css?v=<%= Date.now() %>">
+  <% } else { %>
+  <!-- Development: Use individual CSS files -->
   <link rel="stylesheet" href="/assets/css/style.css?v=<%= Date.now() %>">
   <% if (typeof includeListCSS !== 'undefined' && includeListCSS) { %>
   <link rel="stylesheet" href="/assets/css/pages/list-pages.css?v=<%= Date.now() %>">
@@ -29,7 +34,79 @@
   <% if (typeof includeChartsCSS !== 'undefined' && includeChartsCSS) { %>
   <link rel="stylesheet" href="/assets/css/pages/charts-pages.css?v=<%= Date.now() %>">
   <% } %>
+  <% } %>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Structured Data (JSON-LD) for Schema.org validation -->
+  <% if (typeof includeStructuredData !== 'undefined' && includeStructuredData) { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "<%= title %> | The Blacklist",
+    "description": "HTMX, Express, & Firestore",
+    "url": "<%= typeof pageUrl !== 'undefined' ? pageUrl : 'https://tblx.vercel.app' %>",
+    <% if (typeof pageUrl !== 'undefined' && pageUrl.includes('/stats')) { %>
+    "mainEntity": {
+      "@type": "DataCatalog",
+      "name": "The Blacklist Statistics",
+      "description": "Comprehensive statistical analysis and data visualization for The Blacklist characters",
+      "url": "<%= pageUrl %>",
+      "dataset": {
+        "@type": "Dataset",
+        "name": "The Blacklist Character Statistics",
+        "description": "Statistical data about character statuses, distributions, and analytics",
+        "distribution": [
+          {
+            "@type": "DataDownload",
+            "name": "Status Distribution",
+            "description": "Distribution of character statuses (active, deceased, incarcerated, etc.)",
+            "encodingFormat": "application/json"
+          },
+          {
+            "@type": "DataDownload", 
+            "name": "V1 vs V2 Comparison",
+            "description": "Comparison data between V1 and V2 character numbering systems",
+            "encodingFormat": "application/json"
+          },
+          {
+            "@type": "DataDownload",
+            "name": "Category Distribution", 
+            "description": "Distribution of characters by category and classification",
+            "encodingFormat": "application/json"
+          }
+        ]
+      }
+    },
+    <% } else { %>
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "The Blacklist",
+      "description": "A comprehensive list of characters and items from The Blacklist",
+      "numberOfItems": "<%= typeof itemCount !== 'undefined' ? itemCount : 'Loading...' %>",
+      "itemListElement": []
+    },
+    <% } %>
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://tblx.vercel.app"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "<%= title %>",
+          "item": "<%= typeof pageUrl !== 'undefined' ? pageUrl : 'https://tblx.vercel.app/list' %>"
+        }
+      ]
+    }
+  }
+  </script>
+  <% } %>
   
   <!-- Core Scripts - Always Loaded -->
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.js" integrity="sha384-yWakaGAFicqusuwOYEmoRjLNOC+6OFsdmwC2lbGQaRELtuVEqNzt11c2J711DeCZ" crossorigin="anonymous"></script>
@@ -60,7 +137,17 @@
   <script src="/shared/assets/js/string-schema.js"></script>
   <script src="/assets/js/core/font-manager.js"></script>
   
-  <!-- Optional Scripts -->
+  <% if (process.env.NODE_ENV === 'production') { %>
+  <!-- Production: Use bundled JavaScript -->
+  <% if (typeof includePerformanceMonitor !== 'undefined' && includePerformanceMonitor) { %>
+  <script src="/assets/build/core.min.js?v=<%= Date.now() %>"></script>
+  <% } %>
+  <% if (typeof includeDemoManager !== 'undefined' && includeDemoManager) { %>
+  <script src="/assets/build/managers.min.js?v=<%= Date.now() %>"></script>
+  <script src="/assets/build/utils.min.js?v=<%= Date.now() %>"></script>
+  <% } %>
+  <% } else { %>
+  <!-- Development: Use individual JavaScript files -->
   <% if (typeof includePerformanceMonitor !== 'undefined' && includePerformanceMonitor) { %>
   <script src="/assets/js/core/performance-monitor.js"></script>
   <% } %>
@@ -74,6 +161,7 @@
   
   <% if (typeof includeItemRenderer !== 'undefined' && includeItemRenderer) { %>
   <script src="/shared/assets/js/item-renderer.js?v=<%= Date.now() %>"></script>
+  <% } %>
   <% } %>
   
   <!-- CDN Fallback Script -->
