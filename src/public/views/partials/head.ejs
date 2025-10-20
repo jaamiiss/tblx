@@ -84,7 +84,63 @@
       "name": "The Blacklist",
       "description": "A comprehensive list of characters and items from The Blacklist",
       "numberOfItems": "<%= typeof itemCount !== 'undefined' ? itemCount : 'Loading...' %>",
-      "itemListElement": []
+      "itemListElement": [
+        {
+          "@type": "Person",
+          "name": "Raymond Reddington",
+          "description": "deceased",
+          "identifier": "0",
+          "additionalProperty": {
+            "@type": "PropertyValue",
+            "name": "status",
+            "value": "deceased"
+          }
+        },
+        {
+          "@type": "Person", 
+          "name": "Elizabeth Keen",
+          "description": "deceased",
+          "identifier": "1",
+          "additionalProperty": {
+            "@type": "PropertyValue",
+            "name": "status", 
+            "value": "deceased"
+          }
+        },
+        {
+          "@type": "Person",
+          "name": "Tom Keen", 
+          "description": "deceased",
+          "identifier": "7",
+          "additionalProperty": {
+            "@type": "PropertyValue",
+            "name": "status",
+            "value": "deceased"
+          }
+        },
+        {
+          "@type": "Person",
+          "name": "Berlin",
+          "description": "deceased", 
+          "identifier": "8",
+          "additionalProperty": {
+            "@type": "PropertyValue",
+            "name": "status",
+            "value": "deceased"
+          }
+        },
+        {
+          "@type": "Person",
+          "name": "Robert Vesco",
+          "description": "deceased",
+          "identifier": "9", 
+          "additionalProperty": {
+            "@type": "PropertyValue",
+            "name": "status",
+            "value": "deceased"
+          }
+        }
+      ]
     },
     <% } %>
     "breadcrumb": {
@@ -134,7 +190,9 @@
   
   <!-- Essential Scripts - Always Loaded -->
   <script src="/assets/js/core/header-optimizer.js"></script>
+  <% if (process.env.NODE_ENV !== 'production') { %>
   <script src="/shared/assets/js/string-schema.js"></script>
+  <% } %>
   <script src="/assets/js/core/font-manager.js"></script>
   
   <% if (process.env.NODE_ENV === 'production') { %>
