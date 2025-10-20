@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-10-20T01:30:27.216Z",
+  "buildTime": "2025-10-20T01:40:12.657Z",
   "version": "2.7.0",
   "assets": {
     "css": {
@@ -10,7 +10,7 @@
       "bundle.min.css": "43.99 KB"
     },
     "js": {
-      "core.min.js": "15.99 KB",
+      "core.min.js": "62.76 KB",
       "managers.min.js": "15.67 KB",
       "charts.min.js": "47.81 KB",
       "utils.min.js": "21.61 KB"
