@@ -52,6 +52,7 @@ const buildConfig = {
   js: {
     core: {
       files: [
+        'src/public/assets/js/vendor/htmx.min.js',
         'src/public/assets/js/core/header-optimizer.js',
         'src/public/assets/js/core/font-manager.js',
         'src/public/assets/js/core/performance-monitor.js',
