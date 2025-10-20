@@ -42,7 +42,7 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
+    "@type": "WebPage",
     "name": "<%= title %> | The Blacklist",
     "description": "HTMX, Express, & Firestore",
     "url": "<%= typeof pageUrl !== 'undefined' ? pageUrl : 'https://tblx.vercel.app' %>",
@@ -80,9 +80,9 @@
     },
     <% } else { %>
     "mainEntity": {
-      "@type": "DataCatalog",
-      "name": "The Blacklist Character Database",
-      "description": "A comprehensive database of 200+ characters and items from The Blacklist TV series. This schema shows a sample of the most prominent characters.",
+      "@type": "Collection",
+      "name": "The Blacklist Character Collection",
+      "description": "A comprehensive collection of 200+ characters and items from The Blacklist TV series. This schema shows a sample of the most prominent characters.",
       "numberOfItems": "200",
       "itemListElement": [
         {
