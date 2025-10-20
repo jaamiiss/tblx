@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-10-19T23:14:47.915Z",
+  "buildTime": "2025-10-20T00:04:18.251Z",
   "version": "2.7.0",
   "assets": {
     "css": {
@@ -12,7 +12,7 @@
     "js": {
       "core.min.js": "15.99 KB",
       "managers.min.js": "15.67 KB",
-      "charts.min.js": "47.08 KB",
+      "charts.min.js": "47.81 KB",
       "utils.min.js": "12.73 KB"
     }
   }

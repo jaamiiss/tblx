@@ -40,6 +40,8 @@
     
     <div class="legend-section active" id="statusSection">
       <div class="legend-items" id="statusItems" 
+           role="list"
+           aria-label="Status items"
            hx-get="/status/<%= status || 'unknown' %>" 
            hx-trigger="load" 
            hx-indicator="#statusSpinner"

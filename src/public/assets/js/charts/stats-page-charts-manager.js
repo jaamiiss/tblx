@@ -484,15 +484,6 @@ class StatsPageChartsManager {
   }
 
   /**
-   * Zoom in scatter chart
-   */
-  zoomInScatter() {
-    if (this.scatterChart) {
-      this.scatterChart.zoomIn();
-    }
-  }
-
-  /**
    * Zoom out scatter chart
    */
   zoomOutScatter() {
@@ -950,12 +941,20 @@ class StatsPageChartsManager {
    * Zoom in scatter chart
    */
   zoomInScatter() {
-    if (this.scatterChart && this.scatterChart.chartInstance) {
-      try {
+    if (!this.scatterChart) {
+      this.logger.warn('StatsPageChartsManager: Scatter chart not available for zoom in');
+      return;
+    }
+
+    if (!this.scatterChart.chartInstance) {
+      this.logger.warn('StatsPageChartsManager: Scatter chart instance not available for zoom in');
+      return;
+    }
+
+    try {
       this.scatterChart.zoomIn();
-      } catch (error) {
-        this.logger.warn('StatsPageChartsManager: Error zooming in scatter chart:', error);
-      }
+    } catch (error) {
+      this.logger.warn('StatsPageChartsManager: Error zooming in scatter chart:', error);
     }
   }
 
@@ -963,12 +962,20 @@ class StatsPageChartsManager {
    * Zoom out scatter chart
    */
   zoomOutScatter() {
-    if (this.scatterChart && this.scatterChart.chartInstance) {
-      try {
+    if (!this.scatterChart) {
+      this.logger.warn('StatsPageChartsManager: Scatter chart not available for zoom out');
+      return;
+    }
+
+    if (!this.scatterChart.chartInstance) {
+      this.logger.warn('StatsPageChartsManager: Scatter chart instance not available for zoom out');
+      return;
+    }
+
+    try {
       this.scatterChart.zoomOut();
-      } catch (error) {
-        this.logger.warn('StatsPageChartsManager: Error zooming out scatter chart:', error);
-      }
+    } catch (error) {
+      this.logger.warn('StatsPageChartsManager: Error zooming out scatter chart:', error);
     }
   }
 
