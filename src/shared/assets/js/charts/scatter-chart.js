@@ -567,24 +567,24 @@ class ScatterChart extends BaseChart {
       return;
     }
 
-    try {
-      // Check if zoom plugin is available and chart has proper options
-      if (typeof ChartZoom !== 'undefined' && this.chartInstance.zoom && this.chartInstance.options) {
-        // Use Chart.js zoom plugin API
-        if (this.chartInstance.zoom) {
-          this.chartInstance.zoom(1.2);
-          this.logger.debug('Scatter Chart: Zoomed in using Chart.js zoom plugin');
+      try {
+        // Check if zoom plugin is available and chart has proper options
+        if (typeof ChartZoom !== 'undefined' && this.chartInstance.zoom && this.chartInstance.options) {
+          // Use Chart.js zoom plugin API
+          if (this.chartInstance.zoom) {
+            this.chartInstance.zoom(1.2);
+            this.logger.debug('Scatter Chart: Zoomed in using Chart.js zoom plugin');
+          } else {
+            this.logger.warn('Scatter Chart: Zoom method not available on chart instance');
+          }
         } else {
-          this.logger.warn('Scatter Chart: Zoom method not available on chart instance');
+          // Fallback: manually adjust scales
+          this.manualZoomIn();
         }
-      } else {
-        // Fallback: manually adjust scales
+      } catch (error) {
+        this.logger.warn('Scatter Chart: Error zooming in:', error.message);
+        // Fallback to manual zoom
         this.manualZoomIn();
-      }
-    } catch (error) {
-      this.logger.warn('Scatter Chart: Error zooming in:', error.message);
-      // Fallback to manual zoom
-      this.manualZoomIn();
     }
   }
 
@@ -597,9 +597,9 @@ class ScatterChart extends BaseChart {
       return;
     }
 
-    const scales = this.chartInstance.options.scales;
-    
-    // Get current scale ranges
+      const scales = this.chartInstance.options.scales;
+      
+      // Get current scale ranges
     const xScale = this.chartInstance.scales?.x;
     const yScale = this.chartInstance.scales?.y;
     
@@ -608,25 +608,25 @@ class ScatterChart extends BaseChart {
       return;
     }
 
-    const xRange = xScale.max - xScale.min;
-    const yRange = yScale.max - yScale.min;
-    
-    // Zoom in by 20%
-    const zoomFactor = 0.8;
-    const newXRange = xRange * zoomFactor;
-    const newYRange = yRange * zoomFactor;
-    
-    const xCenter = (xScale.max + xScale.min) / 2;
-    const yCenter = (yScale.max + yScale.min) / 2;
-    
-    // Update scales
-    this.chartInstance.options.scales.x.min = xCenter - newXRange / 2;
-    this.chartInstance.options.scales.x.max = xCenter + newXRange / 2;
-    this.chartInstance.options.scales.y.min = yCenter - newYRange / 2;
-    this.chartInstance.options.scales.y.max = yCenter + newYRange / 2;
-    
-    this.chartInstance.update();
-    this.logger.debug('Scatter Chart: Manual zoom in applied');
+        const xRange = xScale.max - xScale.min;
+        const yRange = yScale.max - yScale.min;
+        
+        // Zoom in by 20%
+        const zoomFactor = 0.8;
+        const newXRange = xRange * zoomFactor;
+        const newYRange = yRange * zoomFactor;
+        
+        const xCenter = (xScale.max + xScale.min) / 2;
+        const yCenter = (yScale.max + yScale.min) / 2;
+        
+        // Update scales
+        this.chartInstance.options.scales.x.min = xCenter - newXRange / 2;
+        this.chartInstance.options.scales.x.max = xCenter + newXRange / 2;
+        this.chartInstance.options.scales.y.min = yCenter - newYRange / 2;
+        this.chartInstance.options.scales.y.max = yCenter + newYRange / 2;
+        
+        this.chartInstance.update();
+        this.logger.debug('Scatter Chart: Manual zoom in applied');
   }
 
   /**
@@ -638,24 +638,24 @@ class ScatterChart extends BaseChart {
       return;
     }
 
-    try {
-      // Check if zoom plugin is available and chart has proper options
-      if (typeof ChartZoom !== 'undefined' && this.chartInstance.zoom && this.chartInstance.options) {
-        // Use Chart.js zoom plugin API
-        if (this.chartInstance.zoom) {
-          this.chartInstance.zoom(0.8);
-          this.logger.debug('Scatter Chart: Zoomed out using Chart.js zoom plugin');
+      try {
+        // Check if zoom plugin is available and chart has proper options
+        if (typeof ChartZoom !== 'undefined' && this.chartInstance.zoom && this.chartInstance.options) {
+          // Use Chart.js zoom plugin API
+          if (this.chartInstance.zoom) {
+            this.chartInstance.zoom(0.8);
+            this.logger.debug('Scatter Chart: Zoomed out using Chart.js zoom plugin');
+          } else {
+            this.logger.warn('Scatter Chart: Zoom method not available on chart instance');
+          }
         } else {
-          this.logger.warn('Scatter Chart: Zoom method not available on chart instance');
+          // Fallback: manually adjust scales
+          this.manualZoomOut();
         }
-      } else {
-        // Fallback: manually adjust scales
+      } catch (error) {
+        this.logger.warn('Scatter Chart: Error zooming out:', error.message);
+        // Fallback to manual zoom
         this.manualZoomOut();
-      }
-    } catch (error) {
-      this.logger.warn('Scatter Chart: Error zooming out:', error.message);
-      // Fallback to manual zoom
-      this.manualZoomOut();
     }
   }
 
@@ -668,9 +668,9 @@ class ScatterChart extends BaseChart {
       return;
     }
 
-    const scales = this.chartInstance.options.scales;
-    
-    // Get current scale ranges
+      const scales = this.chartInstance.options.scales;
+      
+      // Get current scale ranges
     const xScale = this.chartInstance.scales?.x;
     const yScale = this.chartInstance.scales?.y;
     
@@ -679,25 +679,25 @@ class ScatterChart extends BaseChart {
       return;
     }
 
-    const xRange = xScale.max - xScale.min;
-    const yRange = yScale.max - yScale.min;
-    
-    // Zoom out by 20%
-    const zoomFactor = 1.25;
-    const newXRange = xRange * zoomFactor;
-    const newYRange = yRange * zoomFactor;
-    
-    const xCenter = (xScale.max + xScale.min) / 2;
-    const yCenter = (yScale.max + yScale.min) / 2;
-    
-    // Update scales
-    this.chartInstance.options.scales.x.min = xCenter - newXRange / 2;
-    this.chartInstance.options.scales.x.max = xCenter + newXRange / 2;
-    this.chartInstance.options.scales.y.min = yCenter - newYRange / 2;
-    this.chartInstance.options.scales.y.max = yCenter + newYRange / 2;
-    
-    this.chartInstance.update();
-    this.logger.debug('Scatter Chart: Manual zoom out applied');
+        const xRange = xScale.max - xScale.min;
+        const yRange = yScale.max - yScale.min;
+        
+        // Zoom out by 20%
+        const zoomFactor = 1.25;
+        const newXRange = xRange * zoomFactor;
+        const newYRange = yRange * zoomFactor;
+        
+        const xCenter = (xScale.max + xScale.min) / 2;
+        const yCenter = (yScale.max + yScale.min) / 2;
+        
+        // Update scales
+        this.chartInstance.options.scales.x.min = xCenter - newXRange / 2;
+        this.chartInstance.options.scales.x.max = xCenter + newXRange / 2;
+        this.chartInstance.options.scales.y.min = yCenter - newYRange / 2;
+        this.chartInstance.options.scales.y.max = yCenter + newYRange / 2;
+        
+        this.chartInstance.update();
+        this.logger.debug('Scatter Chart: Manual zoom out applied');
   }
 
   /**

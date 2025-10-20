@@ -360,6 +360,7 @@ body.the-blacklist .list-container {
 /* Large tablets */
 @media only screen and (max-width: 1200px) {
   #dataList {
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--list-grid-gap-tablet);
   }
 }
@@ -427,6 +428,7 @@ body.the-blacklist .list-container {
 /* Tablets */
 @media only screen and (max-width: 899px) {
   #dataList {
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--list-grid-gap-mobile);
   }
   
@@ -443,6 +445,7 @@ body.the-blacklist .list-container {
   }
   
   #dataList {
+    grid-template-columns: 1fr;
     gap: var(--list-grid-gap-small);
   }
   
@@ -462,6 +465,10 @@ body.the-blacklist .list-container {
 @media only screen and (max-width: 480px) {
   .list-container {
     padding: var(--padding-container-mobile);
+  }
+  
+  #dataList {
+    grid-template-columns: 1fr;
   }
   
   .list-item {
