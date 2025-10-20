@@ -6,6 +6,23 @@
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const { execSync } = require('child_process');
+
+// Run build process in production if build files don't exist
+if (process.env.NODE_ENV === 'production') {
+  const buildDir = path.join(__dirname, 'src/public/assets/build');
+  const fs = require('fs');
+  
+  if (!fs.existsSync(buildDir) || fs.readdirSync(buildDir).length === 0) {
+    console.log('Production mode: Build files not found, running build process...');
+    try {
+      execSync('npm run build', { stdio: 'inherit' });
+      console.log('Build process completed successfully');
+    } catch (error) {
+      console.error('Build process failed:', error.message);
+    }
+  }
+}
 
 // Import routes
 const publicRoutes = require('./src/public/routes/listRouter');
@@ -33,6 +50,21 @@ app.use('/assets/build', express.static(path.join(__dirname, 'src/public/assets/
   etag: true,
   lastModified: true
 }));
+
+// Debug: Log static file serving
+console.log('Static file paths:');
+console.log('Build files:', path.join(__dirname, 'src/public/assets/build'));
+console.log('Public assets:', path.join(__dirname, 'src/public/assets'));
+
+// Check if build files exist
+const buildDir = path.join(__dirname, 'src/public/assets/build');
+const fs = require('fs');
+if (fs.existsSync(buildDir)) {
+  const buildFiles = fs.readdirSync(buildDir);
+  console.log('Build files found:', buildFiles);
+} else {
+  console.log('Build directory does not exist:', buildDir);
+}
 
 // Middleware
 app.use(express.json());
