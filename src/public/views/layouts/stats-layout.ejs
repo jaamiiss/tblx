@@ -215,7 +215,6 @@ const chartConfig = {
   <!-- Shared Chart Utilities -->
   <% if (process.env.NODE_ENV === 'production') { %>
   <!-- Production: Use bundled JavaScript -->
-  <script src="/assets/build/utils.min.js?v=<%= Date.now() %>"></script>
   <script src="/assets/build/charts.min.js?v=<%= Date.now() %>"></script>
   <% } else { %>
   <!-- Development: Use individual chart JavaScript files -->
