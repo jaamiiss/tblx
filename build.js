@@ -80,7 +80,9 @@ const buildConfig = {
     },
     utils: {
       files: [
+        'src/shared/assets/js/chart-config.js',
         'src/shared/assets/js/chart-utils.js',
+        'src/shared/assets/js/chart-colors.js',
         'src/shared/assets/js/item-renderer.js',
         'src/shared/assets/js/string-schema.js',
         'src/public/assets/js/utils/quota-message-helper.js'
