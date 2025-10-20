@@ -180,7 +180,9 @@ const chartConfig = {
   <script src="/shared/assets/js/chart-button-icons.js"></script>
   
   <!-- Chart Buttons Manager -->
+  <% if (process.env.NODE_ENV !== 'production') { %>
   <script src="/assets/js/charts/chart-buttons-manager.js"></script>
+  <% } %>
   
   <!-- Chart.js Zoom Plugin (UMD version) -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
@@ -228,7 +230,9 @@ const chartConfig = {
   <script src="/shared/assets/js/charts/scatter-chart.js?v=<%= Date.now() %>"></script>
   
   <!-- Stats Page Charts Manager -->
+  <% if (process.env.NODE_ENV !== 'production') { %>
   <script src="/assets/js/charts/stats-page-charts-manager.js?v=<%= Date.now() %>"></script>
+  <% } %>
   <% } %>
 
   <!-- Enhanced Common Scripts -->

@@ -354,11 +354,15 @@
   <% } %>
   
   <!-- Essential Scripts - Always Loaded -->
+  <% if (process.env.NODE_ENV !== 'production') { %>
   <script src="/assets/js/core/header-optimizer.js"></script>
+  <% } %>
   <% if (process.env.NODE_ENV !== 'production') { %>
   <script src="/shared/assets/js/string-schema.js"></script>
   <% } %>
+  <% if (process.env.NODE_ENV !== 'production') { %>
   <script src="/assets/js/core/font-manager.js"></script>
+  <% } %>
   
   <% if (process.env.NODE_ENV === 'production') { %>
   <!-- Production: Use bundled JavaScript -->
