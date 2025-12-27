@@ -1,19 +1,13 @@
 {
-  "buildTime": "2025-10-20T01:45:32.819Z",
-  "version": "2.7.0",
+  "buildTime": "2025-12-21T05:15:23.661Z",
+  "version": "3.1.0",
   "assets": {
     "css": {
-      "style.min.css": "22.14 KB",
-      "list-pages.min.css": "6.36 KB",
-      "status-pages.min.css": "3.75 KB",
-      "charts-pages.min.css": "13.68 KB",
-      "bundle.min.css": "43.99 KB"
+      "style.min.css": "8.30 KB",
+      "bundle.min.css": "8.30 KB"
     },
     "js": {
-      "core.min.js": "62.92 KB",
-      "managers.min.js": "15.67 KB",
-      "charts.min.js": "47.81 KB",
-      "utils.min.js": "21.61 KB"
+      "core.min.js": "49.06 KB"
     }
   }
 }

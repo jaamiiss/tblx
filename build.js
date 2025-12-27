@@ -26,25 +26,10 @@ const buildConfig = {
       input: 'src/public/assets/css/style.css',
       output: 'src/public/assets/build/style.min.css'
     },
-    listPages: {
-      input: 'src/public/assets/css/pages/list-pages.css',
-      output: 'src/public/assets/build/list-pages.min.css'
-    },
-    statusPages: {
-      input: 'src/public/assets/css/pages/status-pages.css',
-      output: 'src/public/assets/build/status-pages.min.css'
-    },
-    chartsPages: {
-      input: 'src/public/assets/css/pages/charts-pages.css',
-      output: 'src/public/assets/build/charts-pages.min.css'
-    },
-    // Combined bundle for all CSS
+    // Combined bundle (now just main since list-pages is merged)
     bundle: {
       inputs: [
-        'src/public/assets/css/style.css',
-        'src/public/assets/css/pages/list-pages.css',
-        'src/public/assets/css/pages/status-pages.css',
-        'src/public/assets/css/pages/charts-pages.css'
+        'src/public/assets/css/style.css'
       ],
       output: 'src/public/assets/build/bundle.min.css'
     }
@@ -53,42 +38,9 @@ const buildConfig = {
     core: {
       files: [
         'src/public/assets/js/vendor/htmx.min.js',
-        'src/public/assets/js/core/header-optimizer.js',
-        'src/public/assets/js/core/font-manager.js',
-        'src/public/assets/js/core/performance-monitor.js',
         'src/public/assets/js/core/index.js'
       ],
       output: 'src/public/assets/build/core.min.js'
-    },
-    managers: {
-      files: [
-        'src/public/assets/js/managers/log-manager.js',
-        'src/public/assets/js/managers/htmx-manager.js',
-        'src/public/assets/js/managers/demo-manager.js'
-      ],
-      output: 'src/public/assets/build/managers.min.js'
-    },
-    charts: {
-      files: [
-        'src/shared/assets/js/charts/base-chart.js',
-        'src/shared/assets/js/charts/pie-chart.js',
-        'src/shared/assets/js/charts/bar-chart.js',
-        'src/shared/assets/js/charts/scatter-chart.js',
-        'src/public/assets/js/charts/stats-page-charts-manager.js',
-        'src/public/assets/js/charts/chart-buttons-manager.js'
-      ],
-      output: 'src/public/assets/build/charts.min.js'
-    },
-    utils: {
-      files: [
-        'src/shared/assets/js/chart-config.js',
-        'src/shared/assets/js/chart-utils.js',
-        'src/shared/assets/js/chart-colors.js',
-        'src/shared/assets/js/item-renderer.js',
-        'src/shared/assets/js/string-schema.js',
-        'src/public/assets/js/utils/quota-message-helper.js'
-      ],
-      output: 'src/public/assets/build/utils.min.js'
     }
   }
 };
@@ -124,7 +76,7 @@ function getFileSize(filePath) {
 // Build CSS
 async function buildCSS() {
   console.log('📦 Building CSS...\n');
-  
+
   const minifier = new CleanCSS({
     level: 2,
     returnPromise: true
@@ -133,9 +85,9 @@ async function buildCSS() {
   // Build individual CSS files
   for (const [cssName, config] of Object.entries(buildConfig.css)) {
     if (cssName === 'bundle') continue; // Handle bundle separately
-    
+
     console.log(`🔨 Building ${cssName} CSS...`);
-    
+
     const cssContent = readFile(config.input);
     if (!cssContent) {
       console.warn(`⚠️  No CSS content for ${cssName}`);
@@ -145,7 +97,7 @@ async function buildCSS() {
     try {
       const result = await minifier.minify(cssContent);
       writeFile(config.output, result.styles);
-      
+
       console.log(`📊 ${cssName}: ${getFileSize(config.input)} → ${getFileSize(config.output)}`);
     } catch (error) {
       console.error(`❌ Error building ${cssName} CSS:`, error.message);
@@ -154,10 +106,10 @@ async function buildCSS() {
 
   // Build combined bundle
   console.log('\n🔨 Building CSS bundle...');
-  
+
   let bundleContent = '';
   let totalOriginalSize = 0;
-  
+
   for (const inputPath of buildConfig.css.bundle.inputs) {
     const content = readFile(inputPath);
     if (content) {
@@ -170,7 +122,7 @@ async function buildCSS() {
     try {
       const result = await minifier.minify(bundleContent);
       writeFile(buildConfig.css.bundle.output, result.styles);
-      
+
       const originalSizeKB = (totalOriginalSize / 1024).toFixed(2);
       console.log(`📊 bundle: ${originalSizeKB} KB → ${getFileSize(buildConfig.css.bundle.output)}`);
       console.log(`📁 Files: ${buildConfig.css.bundle.inputs.length} CSS files combined`);
@@ -178,7 +130,7 @@ async function buildCSS() {
       console.error(`❌ Error building CSS bundle:`, error.message);
     }
   }
-  
+
   console.log('');
 }
 
@@ -188,7 +140,7 @@ async function buildJS() {
 
   for (const [bundleName, config] of Object.entries(buildConfig.js)) {
     console.log(`🔨 Building ${bundleName} bundle...`);
-    
+
     let combinedContent = '';
     let totalOriginalSize = 0;
 
@@ -228,13 +180,13 @@ async function buildJS() {
       }
 
       writeFile(config.output, result.code);
-      
+
       const originalSizeKB = (totalOriginalSize / 1024).toFixed(2);
       const minifiedSizeKB = getFileSize(config.output);
-      
+
       console.log(`📊 ${bundleName}: ${originalSizeKB} KB → ${minifiedSizeKB}`);
       console.log(`📁 Files: ${config.files.length} files combined\n`);
-      
+
     } catch (error) {
       console.error(`❌ Error building ${bundleName}:`, error.message);
     }
@@ -244,7 +196,7 @@ async function buildJS() {
 // Generate build manifest
 function generateManifest() {
   console.log('📋 Generating build manifest...');
-  
+
   const manifest = {
     buildTime: new Date().toISOString(),
     version: require('./package.json').version,
@@ -274,10 +226,10 @@ function generateManifest() {
 async function build() {
   try {
     console.log('🔍 Analyzing project structure...');
-    
+
     // Check if source files exist
     const missingFiles = [];
-    
+
     // Check CSS files
     for (const [cssName, config] of Object.entries(buildConfig.css)) {
       if (config.input && !fs.existsSync(config.input)) {
@@ -290,7 +242,7 @@ async function build() {
         }
       }
     }
-    
+
     // Check JS files
     for (const config of Object.values(buildConfig.js)) {
       for (const file of config.files) {
@@ -313,7 +265,7 @@ async function build() {
 
     console.log('🎉 Build completed successfully!');
     console.log('📁 Build output: src/public/assets/build/');
-    
+
     // Show build summary
     console.log('\n📊 Build Summary:');
     const buildFiles = fs.readdirSync(BUILD_DIR);
@@ -335,7 +287,3 @@ if (require.main === module) {
 }
 
 module.exports = { build };
-
-
-
-

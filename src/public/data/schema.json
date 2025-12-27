@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": [
+            "v1",
+            "name",
+            "status"
+        ],
+        "properties": {
+            "v1": {
+                "type": [
+                    "integer",
+                    "string",
+                    "null"
+                ],
+                "description": "Primary ID or rank of the item"
+            },
+            "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Name of the character or entity"
+            },
+            "status": {
+                "type": "string",
+                "description": "Current status (e.g., active, deceased, incarcerated)"
+            }
+        },
+        "additionalProperties": false
+    }
+}
