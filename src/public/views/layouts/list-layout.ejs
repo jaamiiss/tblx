@@ -1,51 +1,62 @@
-<%- include('../partials/head', { 
-  title: title, 
-  includeListCSS: true, 
-  includeItemRenderer: true, 
-  includeDemoManager: true,
-  includePerformanceMonitor: true,
-  includeStructuredData: true,
-  pageUrl: typeof pageUrl !== 'undefined' ? pageUrl : 'https://tblx.vercel.app/list',
-  itemCount: typeof itemCount !== 'undefined' ? itemCount : 'Loading...'
-}) %>
-<body<% if (typeof customStyling !== 'undefined' && customStyling) { %> class="<%= customStyling %>"<% } %>>
-  <%- include('../partials/header') %>
-  
-  <!-- Demo Banner -->
-  <%- include('../partials/demo-banner') %>
-  
-  <!-- Reusable List Components -->
-  <%- include('../partials/list-components', {
-    activeTab: activeTab,
-    descriptions: descriptions,
-    hideToggleButtons: hideToggleButtons
-  }) %>
-  
-  <div class="list-container">
-    <div id="dataList" 
-         role="list"
-         aria-label="The Blacklist items"
-         hx-get="<%= apiEndpoint %>" 
-         hx-trigger="load" 
-         hx-indicator="#listSpinner"
-         style="position: relative; min-height: 200px;">
-      
-      <!-- List Loading Spinner -->
-      <%- include('../partials/reusable-spinner', { 
-        id: 'listSpinner', 
-        text: 'Loading list items...',
-        size: 'medium',
-        color: 'red'
-      }) %>
-      
-      <!-- List items will be loaded here -->
-    </div>
-  </div>
+<%- include('../partials/head', { title: title, includeListCSS: true, includeItemRenderer: true, includeStructuredData:
+  true, pageUrl: typeof pageUrl !=='undefined' ? pageUrl : ((process.env.APP_URL || 'http://localhost:3006' )
+  + '/the-blacklist' ), itemCount: typeof itemCount !=='undefined' ? itemCount : 'Loading...' }) %>
+  <body<% if (typeof customStyling !=='undefined' && customStyling) { %> class="<%= customStyling %>"<% } %>>
+        <header class="main-header">
+          <h1><a class="link" href="/" id="main-title">THE BLACKLIST</a></h1>
+          <% if (typeof showConfidentialStamp==='undefined' || showConfidentialStamp) { %>
+            <div class="confidential-stamp">HIGHLY CONFIDENTIAL</div>
+            <% } %>
+        </header>
 
-  <!-- Enhanced Common Scripts -->
-  <%- include('../partials/enhanced-common-scripts') %>
-  
-  <!-- List-Specific Scripts -->
-  <%- include('../partials/list-specific-scripts') %>
-</body>
-</html>
+        <main id="main-content" class="list-container">
+          <div id="dataList" role="list" aria-label="The Blacklist items" hx-get="<%= apiEndpoint %>" hx-trigger="load">
+            <!-- List items will be loaded here -->
+          </div>
+        </main>
+
+        <script>
+          window.renderListData = function (data, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const items = Array.isArray(data) ? data : (data.items || []);
+
+            if (!items || items.length === 0) {
+              container.innerHTML = '<div class="no-data">No characters found.</div>';
+              return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            if (Array.isArray(data[0])) {
+              data.forEach((column) => {
+                column.forEach(item => {
+                  const itemHTML = window.ItemRenderer.renderItem(item, {
+                    showV1: true,
+                    includeLegendWrapper: true
+                  });
+                  const tempDiv = document.createElement('div');
+                  tempDiv.innerHTML = itemHTML;
+                  fragment.appendChild(tempDiv.firstElementChild);
+                });
+              });
+            } else {
+              items.forEach((item) => {
+                const itemHTML = window.ItemRenderer.renderItem(item, {
+                  showV1: true,
+                  includeLegendWrapper: true
+                });
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = itemHTML;
+                fragment.appendChild(tempDiv.firstElementChild);
+              });
+            }
+
+            container.innerHTML = '';
+            container.appendChild(fragment);
+          };
+        </script>
+        </body>
+
+        </html>

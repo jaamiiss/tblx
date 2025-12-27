@@ -1,93 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>The Blacklist</title>
-  <meta name="description" content="HTMX, Express, & Firestore">            
-  <link rel="icon" href="/assets/favicon.ico">
-  
-  <!-- Preload critical fonts -->
-  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff" as="font" type="font/woff" crossorigin>
-  
-  <link rel="stylesheet" href="/assets/css/style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <!-- Core Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.7/dist/htmx.js" integrity="sha384-yWakaGAFicqusuwOYEmoRjLNOC+6OFsdmwC2lbGQaRELtuVEqNzt11c2J711DeCZ" crossorigin="anonymous"></script>
-  
-  <!-- Essential Scripts -->
-  <script src="/assets/js/core/header-optimizer.js"></script>
-  <script src="/shared/assets/js/string-schema.js"></script>
-  <script src="/assets/js/core/font-manager.js"></script>
-  
-  <!-- Home Page Specific Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-16esztaSRplJROstbIIdwX3N97V1+pZvV33ABoG1H2OyTttBxEGkTsoIVsiP1iaTtM8b3+hu2kB6pQ4Clr5yug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" integrity="sha512-Ic9xkERjyZ1xgJ5svx3y0u3xrvfT/uPkV99LBwe68xjy/mGtO+4eURHZBW2xW4SZbFrF1Tf090XqB+EVgXnVjw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  
-  <!-- Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6WCN3QXN8W"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-6WCN3QXN8W');
-  </script>
-  
-  <!-- CDN Fallback Script -->
-  <script>
-    // CDN Fallback System
-    window.cdnFallbacks = {
-      htmx: 'https://unpkg.com/htmx.org@2.0.7/dist/htmx.js',
-      gsap: 'https://unpkg.com/gsap@3.12.2/dist/gsap.min.js',
-      scrollTrigger: 'https://unpkg.com/gsap@3.12.2/dist/ScrollTrigger.min.js'
-    };
-    
-    // Check if HTMX loaded successfully
-    if (typeof htmx === 'undefined') {
-      console.warn('HTMX failed to load from CDN, loading fallback...');
-      const script = document.createElement('script');
-      script.src = window.cdnFallbacks.htmx;
-      document.head.appendChild(script);
-    }
-    
-    // Check if GSAP loaded successfully
-    if (typeof gsap === 'undefined') {
-      console.warn('GSAP failed to load from CDN, loading fallback...');
-      const script = document.createElement('script');
-      script.src = window.cdnFallbacks.gsap;
-      document.head.appendChild(script);
-    }
-  </script>
-  
-  <!-- SVG Support Detection -->
-  <script>
-    // Detect SVG support and add class to document element
-    if (!document.implementation.hasFeature('http://www.w3.org/TR/SVG11/feature#BasicStructure', '1.1')) {
-      document.documentElement.className += ' no-svg';
-    }
-  </script>
-</head>
-<body class="home">
-  <div class="wrapper">
-    <div class="items">
-      <div class="item" itemscope itemtype="https://schema.org/ImageObject">
-        <picture>
-          <source type="image/avif" srcset="/assets/images/posters/1.avif">
-          <source type="image/jpeg" srcset="/assets/images/posters/1.jpg">
-          <img src="/assets/images/posters/1.jpg" alt="The Blacklist" itemprop="contentUrl">      
-        </picture>
-        <meta itemprop="url" content="/assets/images/posters/1.jpg">
-        <meta itemprop="caption" content="The Blacklist Poster 1">
+<%- include('partials/head', { title: process.env.SITE_TITLE || 'The Blacklist' , includeStructuredData: true, pageUrl:
+  process.env.APP_URL || 'http://localhost:3006' }) %>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"
+    integrity="sha512-16esztaSRplJROstbIIdwX3N97V1+pZvV33ABoG1H2OyTttBxEGkTsoIVsiP1iaTtM8b3+hu2kB6pQ4Clr5yug=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"
+    integrity="sha512-Ic9xkERjyZ1xgJ5svx3y0u3xrvfT/uPkV99LBwe68xjy/mGtO+4eURHZBW2xW4SZbFrF1Tf090XqB+EVgXnVjw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <body class="home">
+
+
+    <div class="wrapper">
+      <div class="items">
+        <div class="item" itemscope itemtype="https://schema.org/ImageObject">
+          <picture>
+            <img src="<%= process.env.POSTER_IMAGE_PATH || '/assets/images/posters/1.jpg' %>"
+              alt="<%= process.env.SITE_TITLE || 'The Blacklist' %>" itemprop="contentUrl">
+          </picture>
+          <meta itemprop="url" content="<%= process.env.POSTER_IMAGE_PATH || '/assets/images/posters/1.jpg' %>">
+          <meta itemprop="caption" content="<%= process.env.SITE_TITLE || 'The Blacklist' %> Poster">
+        </div>
+      </div>
+      <div class="overlay">
+        <h1 class="title" data-text="<%= process.env.SITE_TITLE || 'The Blacklist' %>">
+          <a class="link" href="/the-blacklist" id="main-title">
+            <span data-text="<%= (process.env.SITE_TITLE || 'The Blacklist').toUpperCase() %>">
+              <%= (process.env.SITE_TITLE || 'The Blacklist' ).toUpperCase() %>
+            </span>
+          </a>
+        </h1>
       </div>
     </div>
-    <div class="overlay">
-      <h1 class="title" data-text="The Blacklist">
-        <a class="link" href="/list" id="main-title">THE BLACKLIST</a>
-      </h1>
-    </div>
-  </div>
-  <script src="/assets/js/gsap/script.js"></script>
-</body>
+    <script src="/assets/js/gsap/script.js"></script>
+  </body>
+
 </html>
