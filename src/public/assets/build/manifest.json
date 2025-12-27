@@ -1,13 +1,13 @@
 {
-  "buildTime": "2025-12-21T05:15:23.661Z",
+  "buildTime": "2025-12-27T15:43:39.083Z",
   "version": "3.1.0",
   "assets": {
     "css": {
-      "style.min.css": "8.30 KB",
-      "bundle.min.css": "8.30 KB"
+      "style.min.css": "13.52 KB",
+      "bundle.min.css": "13.52 KB"
     },
     "js": {
-      "core.min.js": "49.06 KB"
+      "core.min.js": "50.79 KB"
     }
   }
 }
