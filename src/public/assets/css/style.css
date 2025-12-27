@@ -647,6 +647,7 @@ body.seizure-mode {
 
   .list-item {
     padding: var(--padding-item-tablet);
+    font-size: 12px;
   }
 }
 
@@ -659,6 +660,7 @@ body.seizure-mode {
 
   .list-item {
     padding: var(--padding-item-mobile);
+    font-size: 11px;
   }
 
   .main-header {
@@ -673,6 +675,8 @@ body.seizure-mode {
 
   .confidential-stamp {
     transform: none;
+    font-size: 10px;
+    padding: 6px 12px;
   }
 
   /* Adjust overlay H1 for mobile */
@@ -702,6 +706,17 @@ body.seizure-mode {
 @media only screen and (max-width: 480px) {
   .list-item {
     padding: var(--padding-item-small);
+    font-size: 10px;
+  }
+
+  .main-header h1 {
+    font-size: 1.2rem;
+  }
+
+  /* Seizure page responsive */
+  .seizure-container {
+    padding: 20px 15px;
+    border-width: 4px;
   }
 
   /* Seizure page responsive */
