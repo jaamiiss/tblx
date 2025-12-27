@@ -55,9 +55,12 @@ app.use('/public', express.static(path.join(__dirname, 'src/public/assets')));
 app.use('/assets', express.static(path.join(__dirname, 'src/public/assets')));
 
 // Serve optimized build files with cache headers
+// Serve optimized build files with cache headers
+// Decreased maxAge to 1 hour to ensure updates propagate faster during active development
 app.use('/assets/build', express.static(path.join(__dirname, 'src/public/assets/build'), {
-  maxAge: '1y',
-  lastModified: true
+  maxAge: '1h',
+  lastModified: true,
+  etag: true
 }));
 
 // Middleware
