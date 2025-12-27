@@ -55,9 +55,12 @@ app.use('/public', express.static(path.join(__dirname, 'src/public/assets')));
 app.use('/assets', express.static(path.join(__dirname, 'src/public/assets')));
 
 // Serve optimized build files with cache headers
+// Serve optimized build files with cache headers
+// Decreased maxAge to 1 hour to ensure updates propagate faster during active development
 app.use('/assets/build', express.static(path.join(__dirname, 'src/public/assets/build'), {
-  maxAge: '1y',
-  lastModified: true
+  maxAge: '1h',
+  lastModified: true,
+  etag: true
 }));
 
 // Middleware
@@ -70,6 +73,15 @@ app.use('/', publicRoutes);
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
+
+  // Check if it's an API request
+  if (req.headers['hx-request'] || req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1) || req.query.format === 'json') {
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong!'
+    });
+  }
+
   res.status(500).render('error', {
     title: 'Error',
     message: 'Something went wrong!',
@@ -79,6 +91,14 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
+  // Check if it's an API request
+  if (req.headers['hx-request'] || req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1) || req.query.format === 'json') {
+    return res.status(404).json({
+      error: 'Not Found',
+      message: 'The requested resource was not found.'
+    });
+  }
+
   res.status(404).render('error', {
     title: 'Page Not Found',
     message: 'The page you are looking for does not exist.',
