@@ -119,7 +119,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 } catch (error) {
                     logger.error("HTMX: Error parsing JSON response:", error);
-                    // ... error handling ...
+                    // Log the start of the response to see if it's HTML
+                    if (event.detail.xhr.response && typeof event.detail.xhr.response === 'string') {
+                        const preview = event.detail.xhr.response.substring(0, 500);
+                        logger.error("Response preview:", preview);
+                        if (preview.trim().startsWith('<')) {
+                            logger.error("Received HTML instead of JSON. Check server error logs.");
+                        }
+                    }
                 }
             }
         });

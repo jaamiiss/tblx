@@ -73,39 +73,44 @@ router.get('/the-blacklist', (req, res) => {
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
   if (req.headers['hx-request'] || req.query.format === 'json') {
-    const v1Data = BLACKLIST_DATA
-      .filter(item => item.v1 >= 0 && item.v1 <= 200)
-      .sort((a, b) => (a.v1 || 0) - (b.v1 || 0));
+    try {
+      const v1Data = BLACKLIST_DATA
+        .filter(item => item.v1 >= 0 && item.v1 <= 200)
+        .sort((a, b) => (a.v1 || 0) - (b.v1 || 0));
 
-    // Pagination logic
-    const pageParam = req.query.page;
-    const limitParam = req.query.limit;
+      // Pagination logic
+      const pageParam = req.query.page;
+      const limitParam = req.query.limit;
 
-    // Default: Mobile = 20, Desktop = All (v1Data.length)
-    let page = 1;
-    let limit = v1Data.length;
+      // Default: Mobile = 20, Desktop = All (v1Data.length)
+      let page = 1;
+      let limit = v1Data.length;
 
-    if (pageParam || (isMobile && !limitParam)) {
-      page = parseInt(pageParam) || 1;
-      // If mobile and no explicit limit, use 10. If desktop and no explicit limit, use full length.
-      limit = parseInt(limitParam) || (isMobile ? 10 : v1Data.length);
-    } else if (limitParam) {
-      limit = parseInt(limitParam);
+      if (pageParam || (isMobile && !limitParam)) {
+        page = parseInt(pageParam) || 1;
+        // If mobile and no explicit limit, use 10. If desktop and no explicit limit, use full length.
+        limit = parseInt(limitParam) || (isMobile ? 10 : v1Data.length);
+      } else if (limitParam) {
+        limit = parseInt(limitParam);
+      }
+      const startIndex = (page - 1) * limit;
+      const endIndex = page * limit;
+
+      const results = {};
+      results.items = v1Data.slice(startIndex, endIndex);
+      results.total = v1Data.length;
+      results.hasMore = endIndex < v1Data.length;
+
+      if (results.hasMore) {
+        results.next = `/the-blacklist?format=json&page=${page + 1}&limit=${limit}`;
+      }
+
+      // Return flat items with metadata for infinite scroll
+      res.json(results);
+    } catch (error) {
+      console.error('Error processing blacklist data:', error);
+      res.status(500).json({ error: 'Failed to process data', message: error.message });
     }
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-
-    const results = {};
-    results.items = v1Data.slice(startIndex, endIndex);
-    results.total = v1Data.length;
-    results.hasMore = endIndex < v1Data.length;
-
-    if (results.hasMore) {
-      results.next = `/the-blacklist?format=json&page=${page + 1}&limit=${limit}`;
-    }
-
-    // Return flat items with metadata for infinite scroll
-    res.json(results);
   } else {
     const schemaData = BLACKLIST_DATA
       .filter(item => item.v1 >= 0 && item.v1 <= 200)
