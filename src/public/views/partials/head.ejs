@@ -1,447 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title><%= title %> | The Blacklist</title>
-  <meta name="description" content="HTMX, Express, & Firestore">            
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    <%= title %>
+  </title>
+  <meta name="description" content="<%= process.env.SITE_DESCRIPTION || 'The Blacklist - Character Database' %>">
+  <link rel="canonical"
+    href="<%= typeof pageUrl !== 'undefined' ? pageUrl : (process.env.APP_URL || 'http://localhost:3006') %>">
   <link rel="icon" href="/assets/favicon.ico">
-  
-  <!-- Preload critical resources -->
-  <% if (typeof preloadFonts !== 'undefined' && preloadFonts) { %>
-  <% } %>
-  
+
   <!-- Preload critical fonts -->
-  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/shared/assets/fonts/Blacklisted.woff" as="font" type="font/woff" crossorigin>
-  
+  <link rel="preload" href="/assets/fonts/Blacklisted.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/OCR%20A%20Std%20Regular.ttf" as="font" type="font/ttf" crossorigin>
+
   <!-- DNS prefetch for external resources -->
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
-  
-  <% if (process.env.NODE_ENV === 'production') { %>
-  <!-- Production: Use bundled CSS -->
-  <link rel="stylesheet" href="/assets/build/bundle.min.css?v=<%= Date.now() %>">
-  <% } else { %>
-  <!-- Development: Use individual CSS files -->
-  <link rel="stylesheet" href="/assets/css/style.css?v=<%= Date.now() %>">
-  <% if (typeof includeListCSS !== 'undefined' && includeListCSS) { %>
-  <link rel="stylesheet" href="/assets/css/pages/list-pages.css?v=<%= Date.now() %>">
-  <% } %>
-  <% if (typeof includeStatusCSS !== 'undefined' && includeStatusCSS) { %>
-  <link rel="stylesheet" href="/assets/css/pages/status-pages.css?v=<%= Date.now() %>">
-  <% } %>
-  <% if (typeof includeChartsCSS !== 'undefined' && includeChartsCSS) { %>
-  <link rel="stylesheet" href="/assets/css/pages/charts-pages.css?v=<%= Date.now() %>">
-  <% } %>
-  <% } %>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <!-- Structured Data (JSON-LD) for Schema.org validation -->
-  <% if (typeof includeStructuredData !== 'undefined' && includeStructuredData) { %>
-  <script type="application/ld+json">
+
+  <!-- Critical CSS Strategy for List Page -->
+  <% if (typeof includeListCSS !=='undefined' && includeListCSS) { %>
+    <!-- Inline critical CSS for instant render -->
+    <style>
+      <%- include('../../assets/css/critical-list.css') %>
+    </style>
+
+    <!-- Load full CSS asynchronously -->
+    <link rel="stylesheet" href="/assets/css/style.css?v=<%= Date.now() %>" media="print" onload="this.media='all'">
+
+    <!-- Fallback for browsers without JS -->
+    <noscript>
+      <link rel="stylesheet" href="/assets/css/style.css?v=<%= Date.now() %>">
+    </noscript>
+
+    <!-- Ensure async CSS loads -->
+    <script>
+      !function () { "use strict"; var e = document.querySelector('link[media="print"]'); e && setTimeout(function () { e.media = "all" }, 0) }();
+    </script>
+    <% } else { %>
+      <!-- Standard CSS loading for other pages -->
+      <% if (process.env.NODE_ENV==='production' ) { %>
+        <link rel="stylesheet" href="/assets/build/bundle.min.css?v=<%= Date.now() %>">
+        <% } else { %>
+          <link rel="stylesheet" href="/assets/css/style.css?v=<%= Date.now() %>">
+          <% } %>
+            <% } %>
+
+              <!-- Structured Data (JSON-LD) -->
+              <% if (typeof includeStructuredData !=='undefined' && includeStructuredData && typeof schemaData
+                !=='undefined' && schemaData.length> 0) { %>
+                <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= title %> | The Blacklist",
-    "description": "HTMX, Express, & Firestore",
-    "url": "<%= typeof pageUrl !== 'undefined' ? pageUrl : 'https://tblx.vercel.app' %>",
-    <% if (typeof pageUrl !== 'undefined' && pageUrl.includes('/stats')) { %>
-    "mainEntity": {
-      "@type": "DataCatalog",
-      "name": "The Blacklist Statistics",
-      "description": "Comprehensive statistical analysis and data visualization for The Blacklist characters",
-      "url": "<%= pageUrl %>",
-      "dataset": {
-        "@type": "Dataset",
-        "name": "The Blacklist Character Statistics",
-        "description": "Statistical data about character statuses, distributions, and analytics",
-        "distribution": [
-          {
-            "@type": "DataDownload",
-            "name": "Status Distribution",
-            "description": "Distribution of character statuses (active, deceased, incarcerated, etc.)",
-            "encodingFormat": "application/json"
-          },
-          {
-            "@type": "DataDownload", 
-            "name": "V1 vs V2 Comparison",
-            "description": "Comparison data between V1 and V2 character numbering systems",
-            "encodingFormat": "application/json"
-          },
-          {
-            "@type": "DataDownload",
-            "name": "Category Distribution", 
-            "description": "Distribution of characters by category and classification",
-            "encodingFormat": "application/json"
-          }
-        ]
-      }
-    },
-    <% } else { %>
+    "@type": "CollectionPage",
+    "name": "<%= title %>",
+    "description": "<%= process.env.SITE_DESCRIPTION || 'The Blacklist - Character Database' %>",
+    "url": "<%= typeof pageUrl !== 'undefined' ? pageUrl : (process.env.APP_URL || 'http://localhost:3006') %>",
     "mainEntity": {
       "@type": "ItemList",
-      "name": "The Blacklist Character Collection",
-      "description": "A comprehensive collection of 200+ characters and items from The Blacklist TV series. This schema shows a sample of the most prominent characters.",
-      "numberOfItems": "200",
+      "name": "<%= process.env.COLLECTION_NAME || 'The Blacklist Character Collection' %>",
+      "numberOfItems": "<%= schemaData.length %>",
       "itemListElement": [
-        {
-          "@type": "Person",
-          "name": "Raymond Reddington",
-          "description": "deceased",
-          "identifier": "0",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person", 
-          "name": "Elizabeth Keen",
-          "description": "deceased",
-          "identifier": "1",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status", 
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Katarina Rostova",
-          "description": "deceased",
-          "identifier": "3",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Mr. Kaplan",
-          "description": "deceased", 
-          "identifier": "4",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Ivan Stepanov",
-          "description": "active",
-          "identifier": "5", 
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "active"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "The Osterman Umbrella Company",
-          "description": "active",
-          "identifier": "6",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "active"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Tom Keen",
-          "description": "deceased",
-          "identifier": "7",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Berlin",
-          "description": "deceased", 
-          "identifier": "8",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Robert Vesco",
-          "description": "deceased",
-          "identifier": "9", 
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Dembe Zumba",
-          "description": "active",
-          "identifier": "10",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "active"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Tom Connolly",
-          "description": "deceased",
-          "identifier": "11",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "The Decembrist",
-          "description": "deceased",
-          "identifier": "12",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Ian Garvey",
-          "description": "deceased",
-          "identifier": "13",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Alexander Kirk",
-          "description": "active",
-          "identifier": "14",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "active"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Robert Diaz",
-          "description": "incarcerated",
-          "identifier": "15",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "incarcerated"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Anslo Garrick",
-          "description": "deceased",
-          "identifier": "16",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Sutton Ross",
-          "description": "deceased",
-          "identifier": "17",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Susan Hargrave",
-          "description": "active",
-          "identifier": "18",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "active"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "The Capricorn Killer",
-          "description": "active",
-          "identifier": "19",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "active"
-          }
-        },
-        {
-          "@type": "Person",
-          "name": "Bastien Moreau",
-          "description": "deceased",
-          "identifier": "20",
-          "additionalProperty": {
-            "@type": "PropertyValue",
-            "name": "status",
-            "value": "deceased"
-          }
-        }
-      ]
-    },
-    <% } %>
-    "breadcrumb": {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
+        <% schemaData.forEach((item, index) => { %>
         {
           "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": "https://tblx.vercel.app"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "<%= title %>",
-          "item": "<%= typeof pageUrl !== 'undefined' ? pageUrl : 'https://tblx.vercel.app/list' %>"
-        }
+          "position": <%= index + 1 %>,
+          "item": {
+            "@type": "Person",
+            "name": "<%= item.name %>",
+            "identifier": "<%= item.v1 %>"
+          }
+        }<%= index < schemaData.length - 1 ? ',' : '' %>
+        <% }); %>
       ]
     }
   }
   </script>
-  <% } %>
-  
-  <!-- Core Scripts - HTMX (Local) -->
-  <% if (process.env.NODE_ENV === 'production') { %>
-  <!-- Production: HTMX included in core.min.js bundle -->
-  <% } else { %>
-  <script src="/assets/js/vendor/htmx.js"></script>
-  <% } %>
-  
-  <!-- Conditional Scripts -->
-  <% if (typeof includeChartJS !== 'undefined' && includeChartJS) { %>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js"></script>
-  <% } %>
-  
-  <% if (typeof includeGSAP !== 'undefined' && includeGSAP) { %>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-16esztaSRplJROstbIIdwX3N97V1+pZvV33ABoG1H2OyTttBxEGkTsoIVsiP1iaTtM8b3+hu2kB6pQ4Clr5yug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" integrity="sha512-Ic9xkERjyZ1xgJ5svx3y0u3xrvfT/uPkV99LBwe68xjy/mGtO+4eURHZBW2xW4SZbFrF1Tf090XqB+EVgXnVjw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <% } %>
-  
-  <% if (typeof includeAnalytics !== 'undefined' && includeAnalytics) { %>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6WCN3QXN8W"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-6WCN3QXN8W');
-  </script>
-  <% } %>
-  
-  <!-- Essential Scripts - Always Loaded -->
-  <% if (process.env.NODE_ENV !== 'production') { %>
-  <script src="/assets/js/core/header-optimizer.js"></script>
-  <% } %>
-  <% if (process.env.NODE_ENV !== 'production') { %>
-  <script src="/shared/assets/js/string-schema.js"></script>
-  <% } %>
-  <% if (process.env.NODE_ENV !== 'production') { %>
-  <script src="/assets/js/core/font-manager.js"></script>
-  <% } %>
-  
-  <% if (process.env.NODE_ENV === 'production') { %>
-  <!-- Production: Use bundled JavaScript -->
-  <% if (typeof includePerformanceMonitor !== 'undefined' && includePerformanceMonitor) { %>
-  <script src="/assets/build/core.min.js?v=<%= Date.now() %>"></script>
-  <% } %>
-  <% if (typeof includeDemoManager !== 'undefined' && includeDemoManager) { %>
-  <script src="/assets/build/managers.min.js?v=<%= Date.now() %>"></script>
-  <script src="/assets/build/utils.min.js?v=<%= Date.now() %>"></script>
-  <% } %>
-  <% } else { %>
-  <!-- Development: Use individual JavaScript files -->
-  <% if (typeof includePerformanceMonitor !== 'undefined' && includePerformanceMonitor) { %>
-  <script src="/assets/js/core/performance-monitor.js"></script>
-  <% } %>
-  
-  <% if (typeof includeDemoManager !== 'undefined' && includeDemoManager) { %>
-  <script src="/assets/js/managers/log-manager.js?v=<%= Date.now() %>"></script>
-  <script src="/assets/js/managers/htmx-manager.js?v=<%= Date.now() %>"></script>
-  <script src="/assets/js/managers/demo-manager.js?v=<%= Date.now() %>"></script>
-  <script src="/assets/js/utils/quota-message-helper.js?v=<%= Date.now() %>"></script>
-  <% } %>
-  
-  <% if (typeof includeItemRenderer !== 'undefined' && includeItemRenderer) { %>
-  <script src="/shared/assets/js/item-renderer.js?v=<%= Date.now() %>"></script>
-  <% } %>
-  <% } %>
-  
-  <!-- CDN Fallback Script -->
-  <script>
-    // CDN Fallback System
-    window.cdnFallbacks = {
-      htmx: 'https://unpkg.com/htmx.org@2.0.7/dist/htmx.js',
-      chartjs: 'https://unpkg.com/chart.js@4.3.0/dist/chart.umd.js',
-      gsap: 'https://unpkg.com/gsap@3.12.2/dist/gsap.min.js',
-      scrollTrigger: 'https://unpkg.com/gsap@3.12.2/dist/ScrollTrigger.min.js'
-    };
-    
-    // Check if HTMX loaded successfully
-    if (typeof htmx === 'undefined') {
-      console.warn('HTMX failed to load from CDN, loading fallback...');
-      const script = document.createElement('script');
-      script.src = window.cdnFallbacks.htmx;
-      document.head.appendChild(script);
-    }
-    
-    // Check if Chart.js loaded successfully (if required)
-    <% if (typeof includeChartJS !== 'undefined' && includeChartJS) { %>
-    if (typeof Chart === 'undefined') {
-      console.warn('Chart.js failed to load from CDN, loading fallback...');
-      const script = document.createElement('script');
-      script.src = window.cdnFallbacks.chartjs;
-      document.head.appendChild(script);
-    }
-    <% } %>
-    
-    // Check if GSAP loaded successfully (if required)
-    <% if (typeof includeGSAP !== 'undefined' && includeGSAP) { %>
-    if (typeof gsap === 'undefined') {
-      console.warn('GSAP failed to load from CDN, loading fallback...');
-      const script = document.createElement('script');
-      script.src = window.cdnFallbacks.gsap;
-      document.head.appendChild(script);
-    }
-    <% } %>
-  </script>
-  
-  <!-- SVG Support Detection -->
-  <script>
-    // Detect SVG support and add appropriate class
-    (function() {
-      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      if (!svg.getAttributeNS) {
-        document.documentElement.className += ' no-svg';
-      }
-    })();
-  </script>
+                <% } %>
+
+                  <% if (process.env.NODE_ENV==='production' ) { %>
+                    <script src="/assets/build/core.min.js?v=<%= Date.now() %>" defer></script>
+                    <% } else { %>
+                      <script src="/assets/js/vendor/htmx.min.js" defer></script>
+                      <script src="/assets/js/core/index.js" defer></script>
+                      <% if (typeof includeItemRenderer !=='undefined' && includeItemRenderer) { %>
+                        <script src="/assets/js/item-renderer.js?v=<%= Date.now() %>" defer></script>
+                        <% } %>
+                          <% } %>
 </head>

@@ -1,0 +1,238 @@
+/* ========================================
+   CRITICAL CSS FOR LIST PAGE
+   Minimal styles for above-the-fold content
+   ======================================== */
+
+/* Font Declarations */
+@font-face {
+    font-family: 'Blacklisted';
+    src: url('/assets/fonts/Blacklisted.woff2') format('woff2'),
+        url('/assets/fonts/Blacklisted.woff') format('woff');
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'TBL-2';
+    src: url('/assets/fonts/OCR A Std Regular.ttf') format('truetype');
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* CSS Variables */
+:root {
+    --brand-red: #FE0000;
+    --brand-red-dark: #cc0000;
+    --brand-black: #000000;
+    --brand-white: #ffffff;
+    --bg-primary: var(--brand-white);
+    --bg-redacted-item: var(--brand-black);
+    --text-dark: #333;
+    --text-muted: #666;
+    --status-deceased: var(--brand-red);
+    --status-active: #22c55e;
+    --status-incarcerated: #3b82f6;
+    --status-redacted: #a855f7;
+    --status-unknown: #9ca3af;
+    --status-captured: #f59e0b;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --padding-item-desktop: 8px 12px;
+    --font-family-primary: 'TBL-2', monospace;
+    --font-size-desktop: 14px;
+    --transition-normal: 0.3s ease;
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: var(--font-family-primary);
+    background-color: var(--bg-primary);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Main Header */
+.main-header {
+    text-align: center;
+    padding: 20px;
+    background-color: var(--brand-white);
+    position: relative;
+}
+
+.main-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-family: 'Blacklisted', sans-serif;
+}
+
+.main-header .link {
+    color: var(--brand-red);
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* Confidential Stamp */
+.confidential-stamp {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: var(--brand-red);
+    color: var(--brand-white);
+    font-family: 'TBL-2', 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 2px solid var(--brand-red-dark);
+    box-shadow: var(--shadow-sm);
+    transform: rotate(-2deg);
+    position: relative;
+    min-width: 150px;
+    text-align: center;
+}
+
+/* List Container */
+.list-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    position: relative;
+    min-height: 200px;
+}
+
+/* Data List - 4 column flexbox */
+#dataList {
+    display: flex;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+}
+
+#dataList>.column {
+    flex: 1;
+    min-width: 0;
+}
+
+#dataList>.deceased,
+#dataList>.active,
+#dataList>.incarcerated,
+#dataList>.redacted,
+#dataList>.unknown,
+#dataList>.captured {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    break-inside: avoid;
+}
+
+/* List Items */
+.list-item {
+    display: flex;
+    align-items: center;
+    padding: var(--padding-item-desktop);
+    margin: 10px 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: var(--font-size-desktop);
+    font-family: var(--font-family-primary);
+    cursor: pointer;
+}
+
+.list-item .item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.list-item .guide {
+    color: var(--text-muted);
+    font-weight: bold;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.list-item .name {
+    font-weight: bold;
+    color: var(--text-dark);
+}
+
+.list-item .dash {
+    margin: 0 4px;
+    color: var(--text-muted);
+}
+
+.list-item .status {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85em;
+}
+
+/* Status Colors */
+.status.deceased {
+    color: var(--status-deceased);
+}
+
+.status.active {
+    color: var(--status-active);
+}
+
+.status.incarcerated {
+    color: var(--status-incarcerated);
+}
+
+.status.redacted {
+    color: var(--status-redacted);
+}
+
+.status.unknown {
+    color: var(--status-unknown);
+}
+
+.status.captured {
+    color: var(--status-captured);
+}
+
+/* Redacted Items */
+.redacted .list-item {
+    color: var(--text-dark);
+}
+
+.item-redacted {
+    display: inline-block;
+    width: 200px;
+    height: 14px;
+    vertical-align: middle;
+}
+
+/* Mobile Responsive - Critical */
+@media (max-width: 768px) {
+    #dataList {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .main-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .list-item {
+        font-size: 12px;
+        padding: 5px 6px;
+    }
+}
