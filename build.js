@@ -38,6 +38,7 @@ const buildConfig = {
     core: {
       files: [
         'src/public/assets/js/vendor/htmx.min.js',
+        'src/public/assets/js/item-renderer.js',
         'src/public/assets/js/core/index.js'
       ],
       output: 'src/public/assets/build/core.min.js'
