@@ -1165,6 +1165,7 @@ body {
   height: 100%;
   /* For the title, we want transparency or strict bg match */
   background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
 .overlay h1::before {
