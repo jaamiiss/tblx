@@ -4,8 +4,8 @@ const Ajv = require('ajv');
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 
-const schemaPath = path.join(__dirname, '../src/shared/data/schema.json');
-const dataPath = path.join(__dirname, '../src/shared/data/blacklist.json');
+const schemaPath = path.join(__dirname, '../src/public/data/schema.json');
+const dataPath = path.join(__dirname, '../src/public/data/blacklist.json');
 
 try {
     const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
