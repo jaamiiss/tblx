@@ -25,9 +25,10 @@
   "pnpm": {
     "overrides": {
       "body-parser": "^2.3.0",
-      "brace-expansion": "^5.0.9",
-      "fast-uri": "^3.1.6",
-      "qs": "^6.16.0"
+      "brace-expansion": "^5.1.0",
+      "fast-uri": "^3.1.9",
+      "qs": "^6.16.0",
+      "nodemon>minimatch": "^11.0.9"
     }
   },
   "devDependencies": {
